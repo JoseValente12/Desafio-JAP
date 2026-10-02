@@ -13,6 +13,9 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(connectionString));
 
+// Injectable clock so services (and tests) do not depend on DateTime.Today directly.
+builder.Services.AddSingleton(TimeProvider.System);
+
 var app = builder.Build();
 
 // Apply migrations and seed demo data (Development only)
