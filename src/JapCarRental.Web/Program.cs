@@ -19,6 +19,8 @@ builder.Services.AddSingleton(TimeProvider.System);
 
 builder.Services.AddScoped<IVehicleService, VehicleService>();
 
+builder.Services.AddScoped<ICustomerService, CustomerService>();
+
 var app = builder.Build();
 
 // Apply migrations and seed demo data (Development only)
