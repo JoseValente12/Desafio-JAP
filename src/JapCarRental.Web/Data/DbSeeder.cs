@@ -16,16 +16,16 @@ public static class DbSeeder
 
         var vehicles = new[]
         {
-            new Vehicle("Renault", "Clio", "AA-11-BB", 2021, FuelType.Petrol),
-            new Vehicle("Peugeot", "308", "CC-22-DD", 2022, FuelType.Diesel),
-            new Vehicle("Tesla", "Model 3", "EE-33-FF", 2023, FuelType.Electric),
-            new Vehicle("Toyota", "Corolla", "GG-44-HH", 2022, FuelType.Hybrid),
-            new Vehicle("Fiat", "Panda", "II-55-JJ", 2020, FuelType.Lpg),
-            new Vehicle("Volkswagen", "Golf", "KK-66-LL", 2019, FuelType.Diesel),
-            new Vehicle("Kia", "Ceed", "MM-77-NN", 2021, FuelType.Petrol),
-            new Vehicle("Hyundai", "Kona", "OO-88-PP", 2023, FuelType.Electric),
-            new Vehicle("Ford", "Focus", "QQ-99-RR", 2020, FuelType.Diesel),
-            new Vehicle("Seat", "Ibiza", "SS-10-TT", 2022, FuelType.Petrol),
+            new Vehicle("Renault", "Clio", "AA11BB", 2021, FuelType.Petrol),
+            new Vehicle("Peugeot", "308", "CCC22DD", 2022, FuelType.Diesel),
+            new Vehicle("Tesla", "Model 3", "EE33FF", 2023, FuelType.Electric),
+            new Vehicle("Toyota", "Corolla", "GGG44HH", 2022, FuelType.Hybrid),
+            new Vehicle("Fiat", "Panda", "III55JJ", 2020, FuelType.Lpg),
+            new Vehicle("Volkswagen", "Golf", "KKK66LL", 2019, FuelType.Diesel),
+            new Vehicle("Kia", "Ceed", "MMM77NN", 2021, FuelType.Petrol),
+            new Vehicle("Hyundai", "Kona", "OOO88PP", 2023, FuelType.Electric),
+            new Vehicle("Ford", "Focus", "QQQ99RR", 2020, FuelType.Diesel),
+            new Vehicle("Seat", "Ibiza", "SSS10TT", 2022, FuelType.Petrol),
         };
 
         var customers = new[]
