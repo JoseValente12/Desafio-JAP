@@ -44,6 +44,26 @@ public class RentalContract
         EndDate = endDate;
         InitialMileage = initialMileage;
     }
+    
+    // Date on which the contract was cancelled. Null means it was never cancelled.
+    // We store the date instead of a bool so the history shows WHEN it happened,
+    // and the row is kept (soft cancellation) instead of being deleted.
+    public DateOnly? CancelledOn { get; private set; }
 
-    public bool IsActiveOn(DateOnly date) => date >= StartDate && date <= EndDate;
+    // Derived from CancelledOn so the two can never disagree.
+    public bool IsCancelled => CancelledOn.HasValue;
+
+    // A cancelled contract is never active, whatever its dates say.
+    public bool IsActiveOn(DateOnly date) =>
+        !IsCancelled && date >= StartDate && date <= EndDate;
+
+    // The entity only guards its own invariant (cannot cancel twice).
+    // "Only before it starts" depends on today's date, so that rule lives in ContractService.
+    public void Cancel(DateOnly today)
+    {
+        if (IsCancelled)
+            throw new InvalidOperationException("Contract is already cancelled.");
+
+        CancelledOn = today;
+    }
 }

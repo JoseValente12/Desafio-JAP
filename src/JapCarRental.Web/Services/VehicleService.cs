@@ -34,7 +34,9 @@ public class VehicleService : IVehicleService
                 v.LicensePlate,
                 v.ManufactureYear,
                 v.FuelType,
-                v.Contracts.Any(c => c.StartDate <= today && c.EndDate >= today)))
+                v.Contracts.Any(c => c.CancelledOn == null
+                                 && c.StartDate <= today
+                                 && c.EndDate >= today)))
             .ToListAsync();
     }
 
