@@ -58,17 +58,23 @@ If both are set, the environment variable wins. See `src/JapCarRental.Web/appset
 
 ## Create the database
 
+In the Development environment (the default with `dotnet run`), the app applies the migrations and loads demo data on startup, so you only need the SQL Server container and the connection string.
+
+To apply the migrations manually instead:
+
 ```bash
 dotnet ef database update --project src/JapCarRental.Web
 ```
-
-This applies the migrations in `src/JapCarRental.Web/Migrations` and creates the `JapCarRental` database.
 
 ## Run
 
 ```bash
 dotnet run --project src/JapCarRental.Web
 ```
+
+On first run in Development, the app creates the `JapCarRental` database and seeds demo data (10 vehicles, 8 customers, 8 rental contracts). The data is fictional. The seed only runs when the database is empty, so restarting the app does not duplicate anything.
+
+Migrations and seeding are limited to Development on purpose. In production, migrations should be applied in a controlled deployment step.
 
 ## Tests
 
