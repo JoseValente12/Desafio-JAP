@@ -1,5 +1,6 @@
 using JapCarRental.Web.Data;
 using Microsoft.EntityFrameworkCore;
+using JapCarRental.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +16,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // Injectable clock so services (and tests) do not depend on DateTime.Today directly.
 builder.Services.AddSingleton(TimeProvider.System);
+
+builder.Services.AddScoped<IVehicleService, VehicleService>();
 
 var app = builder.Build();
 
