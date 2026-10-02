@@ -21,6 +21,8 @@ builder.Services.AddScoped<IVehicleService, VehicleService>();
 
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 
+builder.Services.AddScoped<IContractService, ContractService>();
+
 var app = builder.Build();
 
 // Apply migrations and seed demo data (Development only)
