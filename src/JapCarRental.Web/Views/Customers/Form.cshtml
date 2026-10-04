@@ -1,0 +1,49 @@
+@model JapCarRental.Web.ViewModels.CustomerFormViewModel
+
+@{
+    var isEdit = Model.Id != 0;
+    ViewData["Title"] = isEdit ? "Editar cliente" : "Novo cliente";
+}
+
+<div class="jr-page-head">
+    <h1 class="jr-title">@ViewData["Title"]</h1>
+</div>
+
+<form method="post" class="jr-form" asp-action="@(isEdit ? "Edit" : "Create")" asp-route-id="@(isEdit ? Model.Id : null)">
+    <div asp-validation-summary="ModelOnly"></div>
+
+    @* The controller checks this matches the route id. *@
+    <input type="hidden" asp-for="Id" />
+
+    <div class="jr-field">
+        <label asp-for="FullName"></label>
+        <input asp-for="FullName" class="jr-input" autocomplete="name" />
+        <span asp-validation-for="FullName"></span>
+    </div>
+
+    <div class="jr-field">
+        <label asp-for="Email"></label>
+        <input asp-for="Email" type="email" class="jr-input" autocomplete="email" />
+        <span asp-validation-for="Email"></span>
+    </div>
+
+    <div class="jr-field">
+        <label asp-for="PhoneNumber"></label>
+        <input asp-for="PhoneNumber" type="tel" class="jr-input" placeholder="912345678" autocomplete="tel" />
+        <div class="jr-hint">Entre 9 e 15 dígitos, com + inicial opcional.</div>
+        <span asp-validation-for="PhoneNumber"></span>
+    </div>
+
+    <div class="jr-field">
+        <label asp-for="DrivingLicenseNumber"></label>
+        <input asp-for="DrivingLicenseNumber" class="jr-input" />
+        <span asp-validation-for="DrivingLicenseNumber"></span>
+    </div>
+
+    <button type="submit" class="jr-btn jr-btn-primary">Guardar</button>
+    <a asp-action="Index" class="jr-btn">Cancelar</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
