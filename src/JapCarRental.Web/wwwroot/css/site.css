@@ -1,31 +1,144 @@
-html {
-  font-size: 14px;
-}
-
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
+/* Design tokens: one place to change the look of the whole app. */
+:root {
+  --asphalt: #1b222c;
+  --fog: #eef1f4;
+  --paper: #ffffff;
+  --eu-blue: #0a3d91;
+  --line: #d9dee5;
+  --muted: #5b6673;
+  --ok: #17794a;
+  --ok-bg: #e1f3e9;
+  --busy: #8a5a00;
+  --busy-bg: #fdecc8;
+  --danger: #b3261e;
+  --radius: 8px;
 }
 
 body {
-  margin-bottom: 60px;
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  background: var(--fog);
+  color: var(--asphalt);
+  line-height: 1.5;
 }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+/* ---------- Top bar ---------- */
+.jr-topbar { background: var(--asphalt); color: #fff; }
+.jr-topbar-inner {
+  max-width: 1040px; margin: 0 auto; padding: 14px 16px;
+  display: flex; align-items: center; gap: 32px;
+}
+.jr-brand {
+  font-family: "Barlow Condensed", sans-serif; font-weight: 600;
+  font-size: 1.6rem; letter-spacing: .02em; color: #fff; text-decoration: none;
+}
+.jr-nav { display: flex; gap: 20px; }
+.jr-nav a { color: #c8d0da; text-decoration: none; padding: 4px 0; border-bottom: 2px solid transparent; }
+.jr-nav a:hover, .jr-nav a:focus-visible { color: #fff; border-bottom-color: #fff; }
+
+/* ---------- Page ---------- */
+.jr-page { max-width: 1040px; margin: 0 auto; padding: 32px 16px 64px; }
+.jr-page-head {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  gap: 16px; flex-wrap: wrap; margin-bottom: 24px;
+}
+.jr-title {
+  font-family: "Barlow Condensed", sans-serif; font-weight: 600;
+  font-size: 2.6rem; line-height: 1; margin: 0;
+}
+.jr-subtitle { color: var(--muted); margin: 6px 0 0; }
+
+/* ---------- Buttons ---------- */
+.jr-btn {
+  display: inline-block; border: 1px solid transparent; border-radius: var(--radius);
+  padding: .5rem 1rem; font: inherit; font-weight: 500; cursor: pointer;
+  text-decoration: none; background: transparent; color: var(--asphalt);
+}
+.jr-btn-primary { background: var(--eu-blue); color: #fff; }
+.jr-btn-primary:hover { background: #082f70; color: #fff; }
+.jr-btn-quiet { border-color: var(--line); background: var(--paper); }
+.jr-btn-quiet:hover { border-color: var(--asphalt); }
+.jr-btn-danger { color: var(--danger); border-color: var(--line); background: var(--paper); }
+.jr-btn-danger:hover { border-color: var(--danger); }
+.jr-btn-sm { padding: .25rem .65rem; font-size: .9rem; }
+.jr-btn:focus-visible, .jr-input:focus-visible, .jr-nav a:focus-visible {
+  outline: 3px solid #7aa7f0; outline-offset: 2px;
 }
 
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+/* ---------- Fleet table ---------- */
+.jr-table-wrap {
+  overflow-x: auto; background: var(--paper);
+  border: 1px solid var(--line); border-radius: 10px;
 }
+.jr-table { width: 100%; border-collapse: collapse; }
+.jr-table th {
+  text-align: left; font-weight: 500; color: var(--muted); font-size: .9rem;
+  padding: 12px 16px; border-bottom: 1px solid var(--line); white-space: nowrap;
+}
+.jr-table td { padding: 14px 16px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.jr-table tr:last-child td { border-bottom: 0; }
+.jr-table tbody tr:hover { background: #f7f9fb; }
+.jr-vehicle-name { font-weight: 600; }
+.jr-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+/* ---------- The licence plate: the one memorable element ---------- */
+.plate {
+  display: inline-flex; border: 2px solid var(--asphalt); border-radius: 6px; overflow: hidden;
+  background: #fff; font-family: "Barlow Condensed", sans-serif; font-weight: 600;
+  font-size: 1.2rem; letter-spacing: .08em; line-height: 1;
+}
+.plate-eu {
+  background: var(--eu-blue); color: #fff; font-size: .65rem; letter-spacing: 0;
+  padding: .35rem .32rem; display: flex; align-items: flex-end;
+}
+.plate-text { padding: .32rem .65rem; }
+
+/* ---------- Status pill (text + dot, never colour alone) ---------- */
+.status {
+  display: inline-flex; align-items: center; gap: .45rem;
+  padding: .2rem .7rem; border-radius: 999px; font-size: .88rem; font-weight: 500;
+}
+.status::before { content: ""; width: .5rem; height: .5rem; border-radius: 50%; background: currentColor; }
+.status-ok { background: var(--ok-bg); color: var(--ok); }
+.status-busy { background: var(--busy-bg); color: var(--busy); }
+
+/* ---------- Messages ---------- */
+.jr-alert { border-radius: var(--radius); padding: 12px 16px; margin-bottom: 20px; border: 1px solid; }
+.jr-alert-success { background: var(--ok-bg); border-color: #a9d9bf; color: #0f5233; }
+.jr-alert-error { background: #fdeceb; border-color: #f0b8b4; color: #7a1a15; }
+
+.jr-empty { background: var(--paper); border: 1px dashed #b9c2cc; border-radius: 10px; padding: 40px 24px; }
+.jr-empty p { margin: 0 0 16px; color: var(--muted); }
+
+/* ---------- Form ---------- */
+.jr-form {
+  background: var(--paper); border: 1px solid var(--line); border-radius: 10px;
+  padding: 24px; max-width: 560px;
+}
+.jr-field { margin-bottom: 18px; }
+.jr-field label { display: block; font-weight: 500; margin-bottom: 6px; }
+.jr-input {
+  width: 100%; border: 1px solid #b9c2cc; border-radius: 6px;
+  padding: .6rem .75rem; font: inherit; background: #fff; color: var(--asphalt);
+}
+.jr-input:focus { border-color: var(--eu-blue); }
+.jr-hint { color: var(--muted); font-size: .88rem; margin-top: 4px; }
+
+/* Classes generated by ASP.NET validation */
+.input-validation-error { border-color: var(--danger); }
+.field-validation-error, .validation-summary-errors { color: var(--danger); font-size: .92rem; }
+.validation-summary-errors ul { margin: 0 0 16px; padding-left: 18px; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+
+/* Smooth hover and focus feedback on interactive elements. */
+.jr-btn,
+.jr-nav a {
+  transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+}
+
+/* Let the top bar wrap on narrow screens instead of overflowing. */
+.jr-topbar-inner { flex-wrap: wrap; gap: 8px 32px; }
+
+/* Disabled state (for buttons we disable while a form is submitting). */
+.jr-btn:disabled { opacity: .55; cursor: not-allowed; }
