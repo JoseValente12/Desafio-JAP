@@ -268,3 +268,34 @@ body { min-height: 100vh; display: flex; flex-direction: column; }
 .jr-filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 16px; margin-top: 12px; }
 .jr-filter label { display: block; font-size: .85rem; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
 .jr-filter .jr-input { width: auto; min-width: 11rem; }
+
+
+/* Confirmation dialog (replaces the browser's confirm box) */
+.jr-dialog {
+    border: 0;
+    border-radius: 12px;
+    padding: 1.5rem;
+    width: calc(100% - 2rem);
+    max-width: 26rem;
+    color: var(--asphalt);
+    box-shadow: 0 20px 50px rgb(33 46 62 / 0.35);
+}
+
+.jr-dialog::backdrop {
+    background: rgb(33 46 62 / 0.55);
+}
+
+.jr-dialog h2 {
+    margin: 0 0 0.5rem;
+    font-size: 1.15rem;
+}
+
+.jr-dialog p {
+    margin: 0 0 1.25rem;
+}
+
+.jr-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}

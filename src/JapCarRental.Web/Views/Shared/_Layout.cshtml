@@ -38,7 +38,16 @@
             </span>
         </div>
     </footer>
-
+    <dialog id="confirm-dialog" class="jr-dialog" aria-labelledby="confirm-title">
+        <form method="dialog">
+            <h2 id="confirm-title">Confirmar ação</h2>
+            <p data-confirm-message></p>
+            <div class="jr-dialog-actions">
+                <button type="submit" value="cancel" class="jr-btn jr-btn-quiet">Voltar</button>
+                <button type="submit" value="ok" class="jr-btn jr-btn-danger">Confirmar</button>
+            </div>
+        </form>
+    </dialog>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/js/confirm-submit.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
