@@ -1,0 +1,60 @@
+@model JapCarRental.Web.ViewModels.VehicleFormViewModel
+
+@{
+    // Id == 0 means create; otherwise edit.
+    var isEdit = Model.Id != 0;
+    ViewData["Title"] = isEdit ? "Editar veículo" : "Novo veículo";
+}
+
+<div class="jr-page-head">
+    <h1 class="jr-title">@ViewData["Title"]</h1>
+</div>
+
+<form method="post" class="jr-form" asp-action="@(isEdit ? "Edit" : "Create")" asp-route-id="@(isEdit ? Model.Id : null)">
+    @* Business-rule errors that are not tied to a field show here. *@
+    <div asp-validation-summary="ModelOnly"></div>
+
+    @* The controller checks this matches the route id (see VehiclesController.Edit). *@
+    <input type="hidden" asp-for="Id" />
+
+    <div class="jr-field">
+        <label asp-for="Brand">Marca</label>
+        <input asp-for="Brand" class="jr-input" />
+        <span asp-validation-for="Brand"></span>
+    </div>
+
+    <div class="jr-field">
+        <label asp-for="Model">Modelo</label>
+        <input asp-for="Model" class="jr-input" />
+        <span asp-validation-for="Model"></span>
+    </div>
+
+    <div class="jr-field">
+        <label asp-for="LicensePlate"></label>
+        <input asp-for="LicensePlate" class="jr-input" placeholder="AA11BB" />
+        <div class="jr-hint">Pode escrever com ou sem hífenes, por exemplo AA-11-BB.</div>
+        <span asp-validation-for="LicensePlate"></span>
+    </div>
+
+    <div class="jr-field">
+        <label asp-for="ManufactureYear"></label>
+        <input asp-for="ManufactureYear" class="jr-input" />
+        <span asp-validation-for="ManufactureYear"></span>
+    </div>
+
+    <div class="jr-field">
+        <label asp-for="FuelType"></label>
+        @* GetEnumSelectList uses the [Display] names from FuelType. *@
+        <select asp-for="FuelType" class="jr-input"
+                asp-items="Html.GetEnumSelectList<JapCarRental.Web.Models.FuelType>()"></select>
+        <span asp-validation-for="FuelType"></span>
+    </div>
+
+    <button type="submit" class="jr-btn jr-btn-primary">Guardar</button>
+    <a asp-action="Index" class="jr-btn">Cancelar</a>
+</form>
+
+@section Scripts {
+    @* Client-side validation (the server still validates everything). *@
+    <partial name="_ValidationScriptsPartial" />
+}

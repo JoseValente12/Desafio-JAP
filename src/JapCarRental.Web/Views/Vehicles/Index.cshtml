@@ -1,0 +1,87 @@
+@model IReadOnlyList<JapCarRental.Web.Services.VehicleListItem>
+
+@{
+    ViewData["Title"] = "Veículos";
+    var rentedCount = Model.Count(v => v.IsRented);
+
+    // Plates are stored without separators (AA11BB); the dashes are only a display choice.
+    static string ShowPlate(string plate) =>
+        plate.Length == 6 ? $"{plate[..2]}-{plate[2..4]}-{plate[4..]}" : plate;
+}
+
+<div class="jr-page-head">
+    <div>
+        <h1 class="jr-title">Veículos</h1>
+        <p class="jr-subtitle">@Model.Count na frota, @rentedCount alugados hoje</p>
+    </div>
+    <a asp-action="Create" class="jr-btn jr-btn-primary">Novo veículo</a>
+</div>
+
+@* Feedback set by the controller after a POST (Post/Redirect/Get keeps the page refresh-safe). *@
+@if (TempData["Success"] is string success)
+{
+    <div class="jr-alert jr-alert-success" role="status">@success</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="jr-alert jr-alert-error" role="alert">@error</div>
+}
+
+@if (Model.Count == 0)
+{
+    <div class="jr-empty">
+        <p>Ainda não há veículos na frota. Adicione o primeiro para começar a gerir os alugueres.</p>
+        <a asp-action="Create" class="jr-btn jr-btn-primary">Adicionar veículo</a>
+    </div>
+}
+else
+{
+    <div class="jr-table-wrap">
+        <table class="jr-table">
+            <thead>
+                <tr>
+                    <th>Veículo</th>
+                    <th>Matrícula</th>
+                    <th>Ano</th>
+                    <th>Combustível</th>
+                    <th>Estado</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var v in Model)
+            {
+                <tr>
+                    <td class="jr-vehicle-name">@v.Brand @v.Model</td>
+                    <td>
+                        <span class="plate"><span class="plate-eu">P</span><span class="plate-text">@ShowPlate(v.LicensePlate)</span></span>
+                    </td>
+                    <td>@v.ManufactureYear</td>
+                    <td>@Html.DisplayFor(_ => v.FuelType)</td>
+                    <td>
+                        @* Status is calculated from the contracts, never stored. *@
+                        @if (v.IsRented)
+                        {
+                            <span class="status status-busy">Alugado</span>
+                        }
+                        else
+                        {
+                            <span class="status status-ok">Disponível</span>
+                        }
+                    </td>
+                    <td>
+                        <div class="jr-actions">
+                            <a asp-action="Edit" asp-route-id="@v.Id" class="jr-btn jr-btn-quiet jr-btn-sm">Editar</a>
+                            @* Delete is a POST; asp-action adds the anti-forgery token automatically. *@
+                            <form asp-action="Delete" asp-route-id="@v.Id" method="post"
+                                  onsubmit="return confirm('Remover este veículo?');">
+                                <button type="submit" class="jr-btn jr-btn-danger jr-btn-sm">Remover</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
