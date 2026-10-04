@@ -1,4 +1,6 @@
+@using JapCarRental.Web.Services
 @model JapCarRental.Web.ViewModels.VehicleIndexViewModel
+
 
 @{
     ViewData["Title"] = "Veículos";
@@ -48,6 +50,20 @@ else
                    placeholder="Pesquisar por marca, modelo ou matrícula"
                    aria-label="Pesquisar veículos" autocomplete="off" />
             <button type="submit" class="jr-btn jr-btn-primary">Pesquisar</button>
+        </div>
+
+        <div class="jr-filters">
+            <div class="jr-filter">
+                <label for="availability">Estado</label>
+                <select id="availability" name="availability" class="jr-input">
+                    <option value="">Todos</option>
+                    <option value="@VehicleAvailability.Available"
+                            selected="@(Model.Availability == VehicleAvailability.Available)">Disponível</option>
+                    <option value="@VehicleAvailability.Rented"
+                            selected="@(Model.Availability == VehicleAvailability.Rented)">Alugado</option>
+                        </select>
+            </div>
+                <a asp-action="Index" class="jr-btn jr-btn-quiet">Limpar filtros</a>
         </div>
     </form>
 
