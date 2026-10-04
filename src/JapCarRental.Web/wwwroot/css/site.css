@@ -50,8 +50,16 @@ button, input, select, textarea { font: inherit; }
   display: flex; align-items: center; gap: 32px;
 }
 .jr-brand {
-  font-weight: 700; font-size: 1.4rem; letter-spacing: .01em;
-  color: #fff; text-decoration: none;
+  font-family: "Bebas Neue", sans-serif;
+  font-weight: 400;
+  font-size: 2.1rem;
+  letter-spacing: .05em;
+  color: #ffffff;
+  text-decoration: none;
+  line-height: 1;
+}
+.jr-brand:hover, .jr-brand:focus-visible {
+  color: var(--danger, #e52b20);
 }
 .jr-nav { display: flex; gap: 20px; }
 .jr-nav a { color: #c8d0da; text-decoration: none; padding: 4px 0; border-bottom: 2px solid transparent; }
@@ -120,7 +128,8 @@ button, input, select, textarea { font: inherit; }
 }
 .status::before { content: ""; width: .5rem; height: .5rem; border-radius: 50%; background: currentColor; }
 .status-ok { background: var(--ok-bg); color: var(--ok); }
-.status-busy { background: var(--ok-bg); color: var(--ok); }
+.status-busy { background: #fdeceb; color: #b3261e; }
+.status-rented { background: #fdeceb; color: #b3261e; }
 
 /* ---------- Messages ---------- */
 .jr-alert { border-radius: var(--radius); padding: 12px 16px; margin-bottom: 20px; border: 1px solid; }
