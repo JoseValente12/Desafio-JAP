@@ -37,10 +37,13 @@ if (app.Environment.IsDevelopment())
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
+    app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
 
+// Turns empty 404/400 responses (for example NotFound() in a controller) into the same friendly page.
+// Re-executing keeps the original status code, so clients and tests still see a real 404.
+app.UseStatusCodePagesWithReExecute("/Error/{0}");
 
 app.UseHttpsRedirection();
 app.UseRouting();
