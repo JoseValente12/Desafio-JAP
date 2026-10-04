@@ -5,6 +5,7 @@
     var isEdit = Model.Id != 0;
     ViewData["Title"] = isEdit ? "Editar veículo" : "Novo veículo";
 }
+<a asp-action="Index" class="jr-back">Voltar aos veículos</a>
 
 <div class="jr-page-head">
     <h1 class="jr-title">@ViewData["Title"]</h1>
@@ -51,7 +52,7 @@
     </div>
 
     <button type="submit" class="jr-btn jr-btn-primary">Guardar</button>
-    <a asp-action="Index" class="jr-btn">Cancelar</a>
+    <a asp-action="Index" class="jr-btn">Voltar</a>
 </form>
 
 @section Scripts {
