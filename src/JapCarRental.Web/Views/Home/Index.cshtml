@@ -1,8 +1,195 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@using System.Globalization
+@using JapCarRental.Web.Services
+@model DashboardSummary
+@{
+    ViewData["Title"] = "Início";
+    var pt = new CultureInfo("pt-PT");
+
+    const int TodayLimit = 10;
+    const int UpcomingLimit = 10;
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="jr-page-head">
+    <div>
+        <h1 class="jr-title">Visão geral</h1>
+        <p class="jr-subtitle">A frota e os contratos num relance.</p>
+    </div>
+    <div class="jr-actions">
+        <a class="jr-btn jr-btn-primary" asp-controller="Contracts" asp-action="Create">Novo contrato</a>
+        <a class="jr-btn jr-btn-quiet" asp-controller="Customers" asp-action="Create">Novo cliente</a>
+        <a class="jr-btn jr-btn-quiet" asp-controller="Vehicles" asp-action="Create">Novo veículo</a>
+    </div>
 </div>
+
+<div class="jr-kpis">
+    <div class="jr-kpi">
+        <p class="jr-kpi-label">Veículos na frota</p>
+        <p class="jr-kpi-value">@Model.TotalVehicles</p>
+    </div>
+    <div class="jr-kpi">
+        <p class="jr-kpi-label">Alugados hoje</p>
+        <p class="jr-kpi-value">@Model.RentedToday</p>
+    </div>
+    <div class="jr-kpi">
+        <p class="jr-kpi-label">Disponíveis</p>
+        <p class="jr-kpi-value">@Model.AvailableToday</p>
+    </div>
+    <div class="jr-kpi">
+        <p class="jr-kpi-label">Taxa de ocupação</p>
+        <p class="jr-kpi-value">@Model.OccupancyPercent.ToString("0.#", pt)%</p>
+        <progress class="jr-progress" max="100"
+                  value="@Model.OccupancyPercent.ToString(CultureInfo.InvariantCulture)"
+                  aria-label="Taxa de ocupação da frota"></progress>
+    </div>
+    <div class="jr-kpi">
+        <p class="jr-kpi-label">Contratos ativos</p>
+        <p class="jr-kpi-value">@Model.ActiveContracts</p>
+    </div>
+   
+        <div class="jr-kpi">
+        <p class="jr-kpi-label">Idade média da frota</p>
+        <p class="jr-kpi-value">
+            @(Model.AverageFleetAge is { } age ? $"{age.ToString("0.#", pt)} anos" : "-")
+        </p>
+    </div>
+</div>
+</div>
+
+<section class="jr-section">
+    <h2>Hoje</h2>
+    <div class="jr-two">
+        <div class="jr-card">
+            <h3>Levantamentos (@Model.PickupsToday.Count)</h3>
+            @if (Model.PickupsToday.Count == 0)
+            {
+                <p class="jr-list-empty">Sem levantamentos hoje.</p>
+            }
+            else
+            {
+                <ul class="jr-list">
+                    @foreach (var c in Model.PickupsToday)
+                    {
+                        <li>
+                            <span><strong>@c.CustomerName</strong><br><span class="jr-hint">@c.VehicleName</span></span>
+                            <span class="plate"><span class="plate-eu">P</span><span class="plate-text">@c.LicensePlate</span></span>
+                        </li>
+                    }
+                </ul>
+                @if (Model.PickupsToday.Count > TodayLimit)
+                {
+                    <p class="jr-hint">
+                        E mais @(Model.PickupsToday.Count - TodayLimit).
+                        <a asp-controller="Contracts" asp-action="Index">Ver contratos</a>
+                    </p>
+                }
+            }
+        </div>
+
+        <div class="jr-card">
+            <h3>Devoluções (@Model.ReturnsToday.Count)</h3>
+            @if (Model.ReturnsToday.Count == 0)
+            {
+                <p class="jr-list-empty">Sem devoluções hoje.</p>
+            }
+            else
+            {
+                <ul class="jr-list">
+                    @foreach (var c in Model.ReturnsToday)
+                    {
+                        <li>
+                            <span><strong>@c.CustomerName</strong><br><span class="jr-hint">@c.VehicleName</span></span>
+                            <span class="plate"><span class="plate-eu">P</span><span class="plate-text">@c.LicensePlate</span></span>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
+</section>
+
+<section class="jr-section">
+    <h2>Próximos 3 dias</h2>
+    @if (Model.UpcomingMovements.Count == 0)
+    {
+        <div class="jr-empty"><p>Sem levantamentos nem devoluções previstos.</p></div>
+    }
+    else
+    {
+        <div class="jr-table-wrap">
+            <table class="jr-table">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Movimento</th>
+                        <th>Cliente</th>
+                        <th>Veículo</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var m in Model.UpcomingMovements)
+                    {
+                        <tr>
+                            <td>@m.Date.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                @if (m.Kind == MovementKind.Pickup)
+                                {
+                                    <span class="status status-upcoming">Levantamento</span>
+                                }
+                                else
+                                {
+                                    <span class="status status-done">Devolução</span>
+                              
+                                    @if (Model.UpcomingMovements.Count > UpcomingLimit)
+                                    {
+                                        <p class="jr-hint">
+                                            A mostrar @UpcomingLimit de @Model.UpcomingMovements.Count.
+                                            <a asp-controller="Contracts" asp-action="Index">Ver todos os contratos</a>
+                                        </p>
+                                    }
+                                }
+                            </td>
+                            <td>@m.Contract.CustomerName</td>
+                            <td>
+                                <span class="jr-vehicle-name">@m.Contract.VehicleName</span>
+                                <span class="plate"><span class="plate-eu">P</span><span class="plate-text">@m.Contract.LicensePlate</span></span>
+                            </td>
+                            <td>
+                                <div class="jr-actions">
+                                    @* Only contracts that have not started can be edited. *@
+                                    @if (m.Contract.Status == ContractStatus.Upcoming)
+                                    {
+                                        <a class="jr-btn jr-btn-quiet jr-btn-sm" asp-controller="Contracts"
+                                           asp-action="Edit" asp-route-id="@m.Contract.Id">Editar</a>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>
+
+<section class="jr-section">
+    <h2>Frota por combustível</h2>
+    <div class="jr-card">
+        @if (Model.FuelBreakdown.Count == 0)
+        {
+            <p class="jr-list-empty">Sem veículos registados.</p>
+        }
+        else
+        {
+            @foreach (var share in Model.FuelBreakdown)
+            {
+                <div class="jr-fuel">
+                    <span>@Html.DisplayFor(_ => share.Fuel)</span>
+                    <progress class="jr-progress" max="100" value="@share.Percent"
+                              aria-label="Percentagem da frota"></progress>
+                    <span class="jr-hint">@share.Count (@share.Percent%)</span>
+                </div>
+            }
+        }
+    </div>
+</section>

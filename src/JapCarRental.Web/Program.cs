@@ -30,6 +30,8 @@ builder.Services.AddScoped<ICustomerService, CustomerService>();
 
 builder.Services.AddScoped<IContractService, ContractService>();
 
+builder.Services.AddScoped<IDashboardService, DashboardService>();
+
 var app = builder.Build();
 
 app.UseMiddleware<SecurityHeadersMiddleware>();
