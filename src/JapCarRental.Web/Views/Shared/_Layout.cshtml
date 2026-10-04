@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt">
 <head>
     <meta charset="utf-8" />
@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Exo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     @* Loaded after Bootstrap so our rules win on equal specificity. *@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
@@ -21,7 +21,6 @@
                 <a asp-controller="Vehicles" asp-action="Index">Veículos</a>
                 <a asp-controller="Customers" asp-action="Index">Clientes</a>
                 <a asp-controller="Contracts" asp-action="Index">Contratos</a>
-                
             </nav>
         </div>
     </header>
@@ -29,16 +28,19 @@
     <main class="jr-page">
         @RenderBody()
     </main>
+
     <footer class="jr-footer">
-    <div class="jr-footer-inner">
-        <span>Jap Car Rental · Desafio técnico</span>
-        <span>
-            © @DateTime.Now.Year
-            <a href="https://www.linkedin.com/in/joseqvalente" target="_blank" rel="noopener noreferrer">José Valente</a>
-        </span>
-    </div>
-</footer>
+        <div class="jr-footer-inner">
+            <span>Jap Car Rental · Desafio técnico</span>
+            <span>
+                © @DateTime.Now.Year
+                <a href="https://www.linkedin.com/in/joseqvalente" target="_blank" rel="noopener noreferrer">José Valente</a>
+            </span>
+        </div>
+    </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/js/confirm-submit.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
