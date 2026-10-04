@@ -60,8 +60,22 @@ public class VehicleService : IVehicleService
         var vehicle = new Vehicle(input.Brand, input.Model, plate, input.ManufactureYear, input.FuelType);
         _db.Vehicles.Add(vehicle);
 
-        // The unique index on LicensePlate is the last guard against two simultaneous requests.
-        await _db.SaveChangesAsync();
+        try
+        {
+            // The unique index on LicensePlate is the last guard against two simultaneous requests.
+            await _db.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            _db.Entry(vehicle).State = EntityState.Detached;
+
+            var plateTaken = await _db.Vehicles.AnyAsync(v => v.LicensePlate == vehicle.LicensePlate);
+            if (!plateTaken) throw;
+
+            var result = new OperationResult<int>();
+            result.AddError(nameof(VehicleInput.LicensePlate), "Já existe um veículo com esta matrícula.");
+            return result;
+        }
 
         return OperationResult<int>.Success(vehicle.Id);
     }
@@ -89,7 +103,22 @@ public class VehicleService : IVehicleService
         }
 
         vehicle.Update(input.Brand, input.Model, plate, input.ManufactureYear, input.FuelType);
-        await _db.SaveChangesAsync();
+
+        try
+        {
+            await _db.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            _db.Entry(vehicle).State = EntityState.Unchanged;
+
+            var plateTaken = await _db.Vehicles.AnyAsync(v => v.Id != id && v.LicensePlate == vehicle.LicensePlate);
+            if (!plateTaken) throw;
+
+            var result = new OperationResult();
+            result.AddError(nameof(VehicleInput.LicensePlate), "Já existe outro veículo com esta matrícula.");
+            return result;
+        }
 
         return OperationResult.Success();
     }
