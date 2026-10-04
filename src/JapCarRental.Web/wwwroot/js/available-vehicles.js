@@ -63,15 +63,19 @@
     const startDate = parseDate(start.value);
     const endDate = parseDate(end.value);
 
-    if (!startDate || !endDate || endDate.getTime() <= startDate.getTime()) {
+    if (!startDate || !endDate || endDate.getTime() < startDate.getTime()) {
       setOptions([]);
-      if (hint) hint.textContent = 'Escolha uma data de fim posterior à data de início.';
+      if (hint) hint.textContent = 'A data de fim não pode ser anterior à data de início.';
       return;
     }
 
+    const contractId = form.querySelector('#Id')?.value;
     const url = new URL(form.dataset.availableUrl, location.href);
     url.searchParams.set('start', toIsoDate(startDate));
     url.searchParams.set('end', toIsoDate(endDate));
+    if (contractId) {
+      url.searchParams.set('ignoreContractId', contractId);
+    }
 
     // Cancel the previous request so an old, slow answer never overwrites a newer one.
     controller?.abort();

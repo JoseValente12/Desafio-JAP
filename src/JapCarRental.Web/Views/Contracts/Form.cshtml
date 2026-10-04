@@ -1,19 +1,22 @@
 @model JapCarRental.Web.ViewModels.ContractFormViewModel
 
 @{
-    ViewData["Title"] = "Novo contrato";
+    var isEdit = Model.Id.HasValue && Model.Id.Value != 0;
+    ViewData["Title"] = isEdit ? "Editar contrato" : "Novo contrato";
 }
 
 <a asp-action="Index" class="jr-back">Voltar aos contratos</a>
 
 <div class="jr-page-head">
-    <h1 class="jr-title">Novo contrato</h1>
+    <h1 class="jr-title">@ViewData["Title"]</h1>
 </div>
 
 @* data-available-url tells available-vehicles.js where to ask for the free vehicles. *@
-<form method="post" class="jr-form" asp-action="Create"
+<form method="post" class="jr-form" asp-action="@(isEdit ? "Edit" : "Create")" asp-route-id="@(isEdit ? Model.Id : null)"
       data-available-url="@Url.Action("AvailableVehicles")">
     <div asp-validation-summary="ModelOnly"></div>
+
+    <input type="hidden" asp-for="Id" />
 
     <div class="jr-field">
         <label asp-for="CustomerId"></label>
@@ -54,7 +57,7 @@
         <span asp-validation-for="InitialMileage"></span>
     </div>
 
-    <button type="submit" class="jr-btn jr-btn-primary">Criar contrato</button>
+    <button type="submit" class="jr-btn jr-btn-primary">@(isEdit ? "Guardar alterações" : "Criar contrato")</button>
     <a asp-action="Index" class="jr-btn">Voltar</a>
 </form>
 

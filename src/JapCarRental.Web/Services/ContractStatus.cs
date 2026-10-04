@@ -7,7 +7,7 @@ namespace JapCarRental.Web.Services;
 /// </summary>
 public enum ContractStatus
 {
-    [Display(Name = "Futuro")]
+    [Display(Name = "Agendado")]
     Upcoming = 1,
 
     [Display(Name = "Ativo")]

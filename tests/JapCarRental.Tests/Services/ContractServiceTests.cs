@@ -155,14 +155,22 @@ public class ContractServiceTests : IDisposable
         Assert.Contains("StartDate", result.Errors.Keys);
     }
 
-    [Theory]
-    [InlineData(10, 10)]  // same day
-    [InlineData(10, 9)]   // end before start
-    public async Task Create_Fails_WhenEndDateIsNotAfterStartDate(int startDay, int endDay)
+    [Fact]
+    public async Task Create_Succeeds_WhenSameDayContract()
     {
         var (customerId, vehicleId) = await SeedAsync();
 
-        var result = await _service.CreateAsync(Input(customerId, vehicleId, Oct(startDay), Oct(endDay)));
+        var result = await _service.CreateAsync(Input(customerId, vehicleId, Oct(10), Oct(10)));
+
+        Assert.True(result.Succeeded);
+    }
+
+    [Fact]
+    public async Task Create_Fails_WhenEndDateIsBeforeStartDate()
+    {
+        var (customerId, vehicleId) = await SeedAsync();
+
+        var result = await _service.CreateAsync(Input(customerId, vehicleId, Oct(10), Oct(9)));
 
         Assert.False(result.Succeeded);
         Assert.Contains("EndDate", result.Errors.Keys);
@@ -200,6 +208,79 @@ public class ContractServiceTests : IDisposable
 
         Assert.False(result.Succeeded);
         Assert.Contains("VehicleId", result.Errors.Keys);
+    }
+
+    // ---------- Update ----------
+
+    [Fact]
+    public async Task Update_Succeeds_ForAgendadoContract()
+    {
+        var (customerId, vehicleId) = await SeedAsync();
+        var contract = await InsertContractAsync(customerId, vehicleId, Oct(10), Oct(15));
+
+        var result = await _service.UpdateAsync(contract.Id, Input(customerId, vehicleId, Oct(12), Oct(18)));
+
+        Assert.True(result.Succeeded);
+        var updated = await _service.GetByIdAsync(contract.Id);
+        Assert.Equal(Oct(12), updated!.StartDate);
+        Assert.Equal(Oct(18), updated.EndDate);
+    }
+
+    [Fact]
+    public async Task Update_Fails_WhenContractHasAlreadyStarted()
+    {
+        var (customerId, vehicleId) = await SeedAsync();
+        var contract = await InsertContractAsync(customerId, vehicleId, Oct(2), Oct(5)); // starts today (Oct 2)
+
+        var result = await _service.UpdateAsync(contract.Id, Input(customerId, vehicleId, Oct(10), Oct(15)));
+
+        Assert.False(result.Succeeded);
+        var error = Assert.Single(result.Errors.Values.SelectMany(x => x));
+        Assert.Equal("Contratos em curso ou finalizados não podem ser alterados.", error);
+    }
+
+    [Fact]
+    public async Task Update_Fails_WhenContractIsCancelled()
+    {
+        var (customerId, vehicleId) = await SeedAsync();
+        var contract = await InsertContractAsync(customerId, vehicleId, Oct(10), Oct(15));
+        await _service.CancelAsync(contract.Id);
+
+        var result = await _service.UpdateAsync(contract.Id, Input(customerId, vehicleId, Oct(12), Oct(18)));
+
+        Assert.False(result.Succeeded);
+        var error = Assert.Single(result.Errors.Values.SelectMany(x => x));
+        Assert.Equal("Contratos em curso ou finalizados não podem ser alterados.", error);
+    }
+
+    [Fact]
+    public async Task Update_Fails_WhenNewPeriodOverlapsAnotherContract()
+    {
+        var (customerId, firstVehicleId) = await SeedAsync("AA11BB");
+        var secondVehicleId = (await _vehicleService.CreateAsync(
+            new VehicleInput("Peugeot", "208", "CC22DD", 2022, FuelType.Diesel))).Value;
+
+        // Existing contract on second vehicle from Oct 10 to Oct 15
+        await InsertContractAsync(customerId, secondVehicleId, Oct(10), Oct(15));
+        // Contract to edit on first vehicle
+        var contractToEdit = await InsertContractAsync(customerId, firstVehicleId, Oct(20), Oct(25));
+
+        // Try to update contractToEdit to use secondVehicleId during Oct 12 to Oct 18 (overlaps Oct 10..15)
+        var result = await _service.UpdateAsync(contractToEdit.Id, Input(customerId, secondVehicleId, Oct(12), Oct(18)));
+
+        Assert.False(result.Succeeded);
+        Assert.Contains("VehicleId", result.Errors.Keys);
+    }
+
+    [Fact]
+    public async Task Update_Succeeds_WhenKeepingSameVehicleAndPeriod()
+    {
+        var (customerId, vehicleId) = await SeedAsync();
+        var contract = await InsertContractAsync(customerId, vehicleId, Oct(10), Oct(15));
+
+        var result = await _service.UpdateAsync(contract.Id, Input(customerId, vehicleId, Oct(10), Oct(15)));
+
+        Assert.True(result.Succeeded);
     }
 
     // ---------- Cancel ----------

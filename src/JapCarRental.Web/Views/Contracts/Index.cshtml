@@ -95,9 +95,10 @@ else
                             </td>
                             <td>
                                 <div class="jr-actions">
-                                    @* Only contracts that have not started can be cancelled. *@
+                                    @* Only contracts that have not started can be edited or cancelled. *@
                                     @if (c.Status == JapCarRental.Web.Services.ContractStatus.Upcoming)
                                     {
+                                        <a asp-action="Edit" asp-route-id="@c.Id" class="jr-btn jr-btn-quiet jr-btn-sm">Editar</a>
                                         <form asp-action="Cancel" asp-route-id="@c.Id" method="post"
                                               onsubmit="return confirm('Cancelar este contrato? Fica no histórico como cancelado.');">
                                             <button type="submit" class="jr-btn jr-btn-danger jr-btn-sm">Cancelar</button>

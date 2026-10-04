@@ -27,12 +27,22 @@ public class RentalContract
     public DateOnly EndDate { get; private set; }
     public int InitialMileage { get; private set; }
 
+    public void Update(int customerId, int vehicleId, DateOnly startDate, DateOnly endDate, int initialMileage)
+    {
+        if (customerId <= 0) throw new ArgumentOutOfRangeException(nameof(customerId));
+        if (vehicleId <= 0) throw new ArgumentOutOfRangeException(nameof(vehicleId));
+
+        CustomerId = customerId;
+        VehicleId = vehicleId;
+        UpdateDatesAndMileage(startDate, endDate, initialMileage);
+    }
+
     public void UpdateDatesAndMileage(DateOnly startDate, DateOnly endDate, int initialMileage)
     {
-        // Rule from the challenge: end date must be after the start date
-        if (endDate <= startDate)
+        // End date cannot be earlier than start date (same day is allowed)
+        if (endDate < startDate)
         {
-            throw new ArgumentException("End date must be after start date.", nameof(endDate));
+            throw new ArgumentException("End date cannot be earlier than start date.", nameof(endDate));
         }
 
         if (initialMileage < 0)
