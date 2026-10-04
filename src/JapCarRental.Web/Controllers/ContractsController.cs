@@ -26,7 +26,12 @@ public class ContractsController : Controller
     }
 
     // GET so a search can be bookmarked and the browser back button works.
-    public async Task<IActionResult> Index(string? search, int page = 1)
+    public async Task<IActionResult> Index(
+        string? search,
+        int page = 1,
+        ContractStatus? status = null, 
+        DateOnly? from = null,
+        DateOnly? to = null)
     {
         var all = await _contracts.GetAllAsync();
         var term = search?.Trim();
@@ -37,16 +42,42 @@ public class ContractsController : Controller
             // Plates are stored without separators (AA11BB), so "aa-11" is compared as "aa11".
             var plateTerm = new string(term.Where(char.IsLetterOrDigit).ToArray());
 
-            filtered = all.Where(c =>
+            filtered = filtered.Where(c =>
                 Matches(c.CustomerName, term) ||
                 Matches(c.VehicleName, term) ||
                 (plateTerm.Length > 0 && Matches(c.LicensePlate, plateTerm)));
         }
 
+        if (status.HasValue)
+        {
+            filtered = filtered.Where(c => c.Status == status.Value);
+        }
+
+        if (from.HasValue && to.HasValue && to.Value < from.Value)
+        {
+            ModelState.AddModelError("to", "A data 'Até' não pode ser anterior à data 'De'.");
+            filtered = Enumerable.Empty<ContractListItem>();
+        }
+        else
+        {
+            if (from.HasValue)
+            {
+                filtered = filtered.Where(c => c.EndDate >= from.Value);
+            }
+
+            if (to.HasValue)
+            {
+                filtered = filtered.Where(c => c.StartDate <= to.Value);
+            }
+        }
+
         return View(new ContractIndexViewModel(
             PagedList<ContractListItem>.Create(filtered, page, PageSize),
             term,
-            all.Count));
+            all.Count,
+            status,
+            from,
+            to));
     }
 
     // Case-insensitive "contains".

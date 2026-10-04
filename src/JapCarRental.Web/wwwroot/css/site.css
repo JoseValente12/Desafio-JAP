@@ -120,7 +120,7 @@ button, input, select, textarea { font: inherit; }
 }
 .status::before { content: ""; width: .5rem; height: .5rem; border-radius: 50%; background: currentColor; }
 .status-ok { background: var(--ok-bg); color: var(--ok); }
-.status-busy { background: var(--busy-bg); color: var(--busy); }
+.status-busy { background: var(--ok-bg); color: var(--ok); }
 
 /* ---------- Messages ---------- */
 .jr-alert { border-radius: var(--radius); padding: 12px 16px; margin-bottom: 20px; border: 1px solid; }
@@ -254,3 +254,8 @@ body { min-height: 100vh; display: flex; flex-direction: column; }
 }
 .jr-footer a { color: var(--link); text-decoration: none; }
 .jr-footer a:hover, .jr-footer a:focus-visible { text-decoration: underline; }
+
+/* ---------- Contract filters ---------- */
+.jr-filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 16px; margin-top: 12px; }
+.jr-filter label { display: block; font-size: .85rem; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+.jr-filter .jr-input { width: auto; min-width: 11rem; }
