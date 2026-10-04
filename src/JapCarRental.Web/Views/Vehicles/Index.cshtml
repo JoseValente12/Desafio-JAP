@@ -1,8 +1,10 @@
-@model IReadOnlyList<JapCarRental.Web.Services.VehicleListItem>
+@model JapCarRental.Web.ViewModels.VehicleIndexViewModel
 
 @{
     ViewData["Title"] = "Veículos";
-    var rentedCount = Model.Count(v => v.IsRented);
+    // Not called "page": @page is a reserved Razor directive.
+    var paged = Model.Vehicles;
+    var searching = !string.IsNullOrEmpty(Model.Search);
 
     // Plates are stored without separators (AA11BB); the dashes are only a display choice.
     static string ShowPlate(string plate) =>
@@ -12,12 +14,15 @@
 <div class="jr-page-head">
     <div>
         <h1 class="jr-title">Veículos</h1>
-        <p class="jr-subtitle">@Model.Count na frota, @rentedCount alugados hoje</p>
+        <p class="jr-subtitle">
+            @(searching
+                ? $"{paged.TotalItems} resultados"
+                : $"{Model.TotalVehicles} na frota, {Model.RentedVehicles} alugados hoje")
+        </p>
     </div>
     <a asp-action="Create" class="jr-btn jr-btn-primary">Novo veículo</a>
 </div>
 
-@* Feedback set by the controller after a POST (Post/Redirect/Get keeps the page refresh-safe). *@
 @if (TempData["Success"] is string success)
 {
     <div class="jr-alert jr-alert-success" role="status">@success</div>
@@ -27,7 +32,7 @@
     <div class="jr-alert jr-alert-error" role="alert">@error</div>
 }
 
-@if (Model.Count == 0)
+@if (Model.TotalVehicles == 0)
 {
     <div class="jr-empty">
         <p>Ainda não há veículos na frota. Adicione o primeiro para começar a gerir os alugueres.</p>
@@ -36,52 +41,104 @@
 }
 else
 {
-    <div class="jr-table-wrap">
-        <table class="jr-table">
-            <thead>
-                <tr>
-                    <th>Veículo</th>
-                    <th>Matrícula</th>
-                    <th>Ano</th>
-                    <th>Combustível</th>
-                    <th>Estado</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-            @foreach (var v in Model)
-            {
-                <tr>
-                    <td class="jr-vehicle-name">@v.Brand @v.Model</td>
-                    <td>
-                        <span class="plate"><span class="plate-eu">P</span><span class="plate-text">@ShowPlate(v.LicensePlate)</span></span>
-                    </td>
-                    <td>@v.ManufactureYear</td>
-                    <td>@Html.DisplayFor(_ => v.FuelType)</td>
-                    <td>
-                        @* Status is calculated from the contracts, never stored. *@
-                        @if (v.IsRented)
-                        {
-                            <span class="status status-busy">Alugado</span>
-                        }
-                        else
-                        {
-                            <span class="status status-ok">Disponível</span>
-                        }
-                    </td>
-                    <td>
-                        <div class="jr-actions">
-                            <a asp-action="Edit" asp-route-id="@v.Id" class="jr-btn jr-btn-quiet jr-btn-sm">Editar</a>
-                            @* Delete is a POST; asp-action adds the anti-forgery token automatically. *@
-                            <form asp-action="Delete" asp-route-id="@v.Id" method="post"
-                                  onsubmit="return confirm('Remover este veículo?');">
-                                <button type="submit" class="jr-btn jr-btn-danger jr-btn-sm">Remover</button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-            }
-            </tbody>
-        </table>
+    <form method="get" asp-action="Index" class="jr-search" role="search"
+          data-live-search data-target="#results">
+        <div class="jr-search-box">
+            <input type="search" name="search" value="@Model.Search" class="jr-input"
+                   placeholder="Pesquisar por marca, modelo ou matrícula"
+                   aria-label="Pesquisar veículos" autocomplete="off" />
+            <button type="submit" class="jr-btn jr-btn-primary">Pesquisar</button>
+        </div>
+    </form>
+
+    @* Only this area is replaced while typing (see wwwroot/js/live-search.js). *@
+    <div id="results" aria-live="polite">
+        @if (paged.Items.Count == 0)
+        {
+            <div class="jr-empty">
+                <p>Nenhum veículo corresponde a "@Model.Search". Tente a marca, o modelo ou a matrícula.</p>
+            </div>
+        }
+        else
+        {
+            <div class="jr-table-wrap">
+                <table class="jr-table">
+                    <thead>
+                        <tr>
+                            <th>Veículo</th>
+                            <th>Matrícula</th>
+                            <th>Ano</th>
+                            <th>Combustível</th>
+                            <th>Estado</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var v in paged.Items)
+                    {
+                        <tr>
+                            <td class="jr-vehicle-name">@v.Brand @v.Model</td>
+                            <td>
+                                <span class="plate"><span class="plate-eu">P</span><span class="plate-text">@ShowPlate(v.LicensePlate)</span></span>
+                            </td>
+                            <td>@v.ManufactureYear</td>
+                            <td>@Html.DisplayFor(_ => v.FuelType)</td>
+                            <td>
+                                @* Status is calculated from the contracts, never stored. *@
+                                @if (v.IsRented)
+                                {
+                                    <span class="status status-busy">Alugado</span>
+                                }
+                                else
+                                {
+                                    <span class="status status-ok">Disponível</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="jr-actions">
+                                    <a asp-action="Edit" asp-route-id="@v.Id" class="jr-btn jr-btn-quiet jr-btn-sm">Editar</a>
+                                    <form asp-action="Delete" asp-route-id="@v.Id" method="post"
+                                          onsubmit="return confirm('Remover este veículo?');">
+                                        <button type="submit" class="jr-btn jr-btn-danger jr-btn-sm">Remover</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+
+            <nav class="jr-pager" aria-label="Paginação">
+                <span>A mostrar @paged.FirstItem a @paged.LastItem de @paged.TotalItems</span>
+                <div class="jr-pager-nav">
+                    @if (paged.HasPrevious)
+                    {
+                        <a asp-action="Index" asp-route-page="@(paged.Page - 1)" asp-route-search="@Model.Search"
+                           class="jr-btn jr-btn-quiet jr-btn-sm">Anterior</a>
+                    }
+                    else
+                    {
+                        <span class="jr-btn jr-btn-quiet jr-btn-sm is-disabled" aria-disabled="true">Anterior</span>
+                    }
+
+                    <span>Página @paged.Page de @paged.TotalPages</span>
+
+                    @if (paged.HasNext)
+                    {
+                        <a asp-action="Index" asp-route-page="@(paged.Page + 1)" asp-route-search="@Model.Search"
+                           class="jr-btn jr-btn-quiet jr-btn-sm">Seguinte</a>
+                    }
+                    else
+                    {
+                        <span class="jr-btn jr-btn-quiet jr-btn-sm is-disabled" aria-disabled="true">Seguinte</span>
+                    }
+                </div>
+            </nav>
+        }
     </div>
+}
+
+@section Scripts {
+    <script src="~/js/live-search.js" asp-append-version="true"></script>
 }
