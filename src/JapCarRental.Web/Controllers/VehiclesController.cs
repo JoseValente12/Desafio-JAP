@@ -81,6 +81,8 @@ public IActionResult Create() => View("Form", new VehicleFormViewModel());
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, VehicleFormViewModel form)
     {
+         if (id != form.Id) return BadRequest();
+         
         if (!ModelState.IsValid) return View("Form", form);
 
         // The id comes from the route, not from the form, so a tampered hidden field changes nothing.
