@@ -15,28 +15,22 @@ public class VehiclesController : Controller
     }
 
     // GET so a search can be bookmarked and the browser back button works.
-public async Task<IActionResult> Index(string? search, int page = 1)
-{
-    var all = await _vehicles.GetAllAsync();
-    var term = search?.Trim();
-
-    IEnumerable<VehicleListItem> filtered = all;
-    if (!string.IsNullOrEmpty(term))
+    // GET so a search can be bookmarked and the browser back button works.
+    public async Task<IActionResult> Index(string? search, int page = 1, VehicleAvailability? availability = null)
     {
-        // Plates are stored without separators (AA11BB), so "aa-11" must be compared as "aa11".
-        var plateTerm = new string(term.Where(char.IsLetterOrDigit).ToArray());
+        var all = await _vehicles.GetAllAsync();
 
-        filtered = all.Where(v =>
-            Matches($"{v.Brand} {v.Model}", term) ||
-            (plateTerm.Length > 0 && Matches(v.LicensePlate, plateTerm)));
+        // The rules (text search and availability) live in VehicleFilter, which is unit tested.
+        // The controller only reads the query string, applies the filter and pages the result.
+        var filter = new VehicleFilter(search?.Trim(), availability);
+
+        return View(new VehicleIndexViewModel(
+            PagedList<VehicleListItem>.Create(filter.Apply(all), page, PageSize),
+            filter.Search,
+            all.Count,
+            all.Count(v => v.IsRented),
+            availability));
     }
-
-    return View(new VehicleIndexViewModel(
-        PagedList<VehicleListItem>.Create(filtered, page, PageSize),
-        term,
-        all.Count,
-        all.Count(v => v.IsRented)));
-}
 
 // Case-insensitive "contains" so "clio" finds "Renault Clio".
 private static bool Matches(string value, string term) =>
