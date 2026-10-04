@@ -24,6 +24,7 @@ public record VehicleFilter(string? Search = null, VehicleAvailability? Availabi
             var plateTerm = new string(term.Where(char.IsLetterOrDigit).ToArray());
 
             result = result.Where(v =>
+                Matches($"{v.Brand} {v.Model}", term) ||
                 Matches(v.Brand, term) ||
                 Matches(v.Model, term) ||
                 (plateTerm.Length > 0 && Matches(v.LicensePlate, plateTerm)));
