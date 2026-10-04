@@ -54,6 +54,39 @@ public class ContractService : IContractService
         return OperationResult<int>.Success(contract.Id);
     }
 
+    public async Task<OperationResult> UpdateAsync(int id, ContractInput input)
+    {
+        var contract = await _db.RentalContracts.FindAsync(id);
+        if (contract is null)
+        {
+            return OperationResult.Failure("Contrato não encontrado.");
+        }
+
+        var today = Today();
+
+        // Business rule: contracts already started (or finished or cancelled) cannot be edited.
+        if (contract.StartDate <= today || contract.IsCancelled)
+        {
+            return OperationResult.Failure("Contratos em curso ou finalizados não podem ser alterados.");
+        }
+
+        var validation = ValidateInput(input, today);
+        if (validation.Succeeded)
+        {
+            await ValidateAgainstDatabaseAsync(input, validation, ignoreContractId: id);
+        }
+
+        if (!validation.Succeeded)
+        {
+            return validation;
+        }
+
+        contract.Update(input.CustomerId, input.VehicleId, input.StartDate, input.EndDate, input.InitialMileage);
+        await _db.SaveChangesAsync();
+
+        return OperationResult.Success();
+    }
+
     // CHANGED: contracts are never deleted. Cancelling keeps the row so the history stays complete.
     public async Task<OperationResult> CancelAsync(int id)
     {
@@ -81,18 +114,18 @@ public class ContractService : IContractService
         return OperationResult.Success();
     }
 
-    public async Task<IReadOnlyList<VehicleOption>> GetAvailableVehiclesAsync(DateOnly startDate, DateOnly endDate)
+    public async Task<IReadOnlyList<VehicleOption>> GetAvailableVehiclesAsync(DateOnly startDate, DateOnly endDate, int? ignoreContractId = null)
     {
-        if (endDate <= startDate)
+        if (endDate < startDate)
         {
             return Array.Empty<VehicleOption>();
         }
 
-        // A vehicle is available when none of its NON-cancelled contracts overlaps the period.
-        // CHANGED: cancelled contracts no longer block the vehicle.
+        // A vehicle is available when none of its NON-cancelled contracts (except the current one if editing) overlaps the period.
         var vehicles = await _db.Vehicles
             .AsNoTracking()
-            .Where(v => !v.Contracts.Any(c => c.CancelledOn == null
+            .Where(v => !v.Contracts.Any(c => (ignoreContractId == null || c.Id != ignoreContractId.Value)
+                                              && c.CancelledOn == null
                                               && c.StartDate <= endDate
                                               && c.EndDate >= startDate))
             .OrderBy(v => v.Brand).ThenBy(v => v.Model)
@@ -120,8 +153,8 @@ public class ContractService : IContractService
         if (input.StartDate < today)
             result.AddError(nameof(ContractInput.StartDate), "A data de início não pode ser anterior a hoje.");
 
-        if (input.EndDate <= input.StartDate)
-            result.AddError(nameof(ContractInput.EndDate), "A data de fim deve ser posterior à data de início.");
+        if (input.EndDate < input.StartDate)
+            result.AddError(nameof(ContractInput.EndDate), "A data de fim não pode ser anterior à data de início.");
 
         if (input.InitialMileage < 0)
             result.AddError(nameof(ContractInput.InitialMileage), "A quilometragem inicial não pode ser negativa.");
@@ -130,7 +163,7 @@ public class ContractService : IContractService
     }
 
     // Checks that need the database: both records exist and the vehicle is free in the period.
-    private async Task ValidateAgainstDatabaseAsync(ContractInput input, OperationResult validation)
+    private async Task ValidateAgainstDatabaseAsync(ContractInput input, OperationResult validation, int? ignoreContractId = null)
     {
         var customerExists = await _db.Customers.AnyAsync(c => c.Id == input.CustomerId);
         if (!customerExists)
@@ -147,10 +180,11 @@ public class ContractService : IContractService
 
         // Two periods overlap when each one starts before (or on the day) the other ends.
         // Dates are inclusive, so a contract ending on the 10th blocks one starting on the 10th.
-        // CHANGED: cancelled contracts are ignored.
+        // CHANGED: cancelled contracts are ignored, and when updating, the current contract is ignored.
         var conflict = await _db.RentalContracts
             .AsNoTracking()
-            .Where(c => c.VehicleId == input.VehicleId
+            .Where(c => (ignoreContractId == null || c.Id != ignoreContractId.Value)
+                        && c.VehicleId == input.VehicleId
                         && c.CancelledOn == null
                         && c.StartDate <= input.EndDate
                         && c.EndDate >= input.StartDate)
