@@ -5,6 +5,8 @@
     ViewData["Title"] = isEdit ? "Editar cliente" : "Novo cliente";
 }
 
+<a asp-action="Index" class="jr-back">Voltar aos clientes</a>
+
 <div class="jr-page-head">
     <h1 class="jr-title">@ViewData["Title"]</h1>
 </div>
@@ -41,7 +43,7 @@
     </div>
 
     <button type="submit" class="jr-btn jr-btn-primary">Guardar</button>
-    <a asp-action="Index" class="jr-btn">Cancelar</a>
+    <a asp-action="Index" class="jr-btn">Voltar</a>
 </form>
 
 @section Scripts {

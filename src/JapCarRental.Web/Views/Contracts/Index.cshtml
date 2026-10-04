@@ -1,0 +1,146 @@
+@model JapCarRental.Web.ViewModels.ContractIndexViewModel
+
+@{
+    ViewData["Title"] = "Contratos";
+    // Not called "page": @page is a reserved Razor directive.
+    var paged = Model.Contracts;
+    var searching = !string.IsNullOrEmpty(Model.Search);
+
+    // Plates are stored without separators (AA11BB); the dashes are only a display choice.
+    static string ShowPlate(string plate) =>
+        plate.Length == 6 ? $"{plate[..2]}-{plate[2..4]}-{plate[4..]}" : plate;
+
+    static string StatusClass(JapCarRental.Web.Services.ContractStatus status) => status switch
+    {
+        JapCarRental.Web.Services.ContractStatus.Upcoming => "status-upcoming",
+        JapCarRental.Web.Services.ContractStatus.Active => "status-busy",
+        JapCarRental.Web.Services.ContractStatus.Finished => "status-done",
+        _ => "status-cancelled"
+    };
+}
+
+<div class="jr-page-head">
+    <div>
+        <h1 class="jr-title">Contratos</h1>
+        <p class="jr-subtitle">
+            @(searching ? $"{paged.TotalItems} resultados" : $"{Model.TotalContracts} registados")
+        </p>
+    </div>
+    <a asp-action="Create" class="jr-btn jr-btn-primary">Novo contrato</a>
+</div>
+
+@if (TempData["Success"] is string success)
+{
+    <div class="jr-alert jr-alert-success" role="status">@success</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="jr-alert jr-alert-error" role="alert">@error</div>
+}
+
+@if (Model.TotalContracts == 0)
+{
+    <div class="jr-empty">
+        <p>Ainda não há contratos. Crie o primeiro para alugar um veículo a um cliente.</p>
+        <a asp-action="Create" class="jr-btn jr-btn-primary">Criar contrato</a>
+    </div>
+}
+else
+{
+    <form method="get" asp-action="Index" class="jr-search" role="search"
+          data-live-search data-target="#results">
+        <div class="jr-search-box">
+            <input type="search" name="search" value="@Model.Search" class="jr-input"
+                   placeholder="Pesquisar por cliente, veículo ou matrícula"
+                   aria-label="Pesquisar contratos" autocomplete="off" />
+            <button type="submit" class="jr-btn jr-btn-primary">Pesquisar</button>
+        </div>
+    </form>
+
+    <div id="results" aria-live="polite">
+        @if (paged.Items.Count == 0)
+        {
+            <div class="jr-empty">
+                <p>Nenhum contrato corresponde a "@Model.Search". Tente o nome do cliente, o veículo ou a matrícula.</p>
+            </div>
+        }
+        else
+        {
+            <div class="jr-table-wrap">
+                <table class="jr-table">
+                    <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th>Veículo</th>
+                            <th>Período</th>
+                            <th>Km iniciais</th>
+                            <th>Estado</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var c in paged.Items)
+                    {
+                        <tr>
+                            <td class="jr-vehicle-name">@c.CustomerName</td>
+                            <td>
+                                <div>@c.VehicleName</div>
+                                <span class="plate"><span class="plate-eu">P</span><span class="plate-text">@ShowPlate(c.LicensePlate)</span></span>
+                            </td>
+                            <td>@c.StartDate.ToString("dd/MM/yyyy") a @c.EndDate.ToString("dd/MM/yyyy")</td>
+                            <td>@c.InitialMileage</td>
+                            <td>
+                                @* Status is calculated from the dates and the cancellation, never stored. *@
+                                <span class="status @StatusClass(c.Status)">@Html.DisplayFor(_ => c.Status)</span>
+                            </td>
+                            <td>
+                                <div class="jr-actions">
+                                    @* Only contracts that have not started can be cancelled. *@
+                                    @if (c.Status == JapCarRental.Web.Services.ContractStatus.Upcoming)
+                                    {
+                                        <form asp-action="Cancel" asp-route-id="@c.Id" method="post"
+                                              onsubmit="return confirm('Cancelar este contrato? Fica no histórico como cancelado.');">
+                                            <button type="submit" class="jr-btn jr-btn-danger jr-btn-sm">Cancelar</button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+
+            <nav class="jr-pager" aria-label="Paginação">
+                <span>A mostrar @paged.FirstItem a @paged.LastItem de @paged.TotalItems</span>
+                <div class="jr-pager-nav">
+                    @if (paged.HasPrevious)
+                    {
+                        <a asp-action="Index" asp-route-page="@(paged.Page - 1)" asp-route-search="@Model.Search"
+                           class="jr-btn jr-btn-quiet jr-btn-sm">Anterior</a>
+                    }
+                    else
+                    {
+                        <span class="jr-btn jr-btn-quiet jr-btn-sm is-disabled" aria-disabled="true">Anterior</span>
+                    }
+
+                    <span>Página @paged.Page de @paged.TotalPages</span>
+
+                    @if (paged.HasNext)
+                    {
+                        <a asp-action="Index" asp-route-page="@(paged.Page + 1)" asp-route-search="@Model.Search"
+                           class="jr-btn jr-btn-quiet jr-btn-sm">Seguinte</a>
+                    }
+                    else
+                    {
+                        <span class="jr-btn jr-btn-quiet jr-btn-sm is-disabled" aria-disabled="true">Seguinte</span>
+                    }
+                </div>
+            </nav>
+        }
+    </div>
+}
+
+@section Scripts {
+    <script src="~/js/live-search.js" asp-append-version="true"></script>
+}

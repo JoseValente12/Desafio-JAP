@@ -158,3 +158,20 @@ body {
 }
 .jr-pager-nav { display: flex; align-items: center; gap: 16px; }
 .is-disabled { opacity: .55; cursor: not-allowed; }
+
+/* ---------- Contract status and form rows ---------- */
+.status-upcoming { background: #e3ecfb; color: var(--eu-blue); }
+.status-done { background: #eceff3; color: #4a5562; }
+.status-cancelled { background: #fdeceb; color: #8a1f19; }
+
+.jr-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 520px) { .jr-row { grid-template-columns: 1fr; } }
+
+
+
+/* ---------- Back link and searchable selects ---------- */
+.jr-back { display: inline-block; margin-bottom: 12px; color: var(--muted); text-decoration: none; }
+.jr-back::before { content: "\2039"; margin-right: .4rem; }
+.jr-back:hover, .jr-back:focus-visible { color: var(--asphalt); text-decoration: underline; }
+
+.jr-select-filter { margin-bottom: 6px; }
