@@ -1,11 +1,18 @@
 using JapCarRental.Web.Data;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using JapCarRental.Web.Services;
+using JapCarRental.Web.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options =>
+{
+    // Every POST/PUT/DELETE must carry a valid anti-forgery token, even if an action
+    // forgets the attribute. Safe methods (GET) are not checked.
+    options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
+});
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException(
@@ -24,6 +31,8 @@ builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IContractService, ContractService>();
 
 var app = builder.Build();
+
+app.UseMiddleware<SecurityHeadersMiddleware>();
 
 // Apply migrations and seed demo data (Development only)
 if (app.Environment.IsDevelopment())
