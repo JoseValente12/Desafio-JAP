@@ -1,20 +1,20 @@
-using System.Diagnostics;
+using JapCarRental.Web.Services;
 using Microsoft.AspNetCore.Mvc;
-using JapCarRental.Web.Models;
 
 namespace JapCarRental.Web.Controllers;
 
 public class HomeController : Controller
 {
-    public IActionResult Index()
+    private readonly IDashboardService _dashboard;
+
+    public HomeController(IDashboardService dashboard)
     {
-        return View();
+        _dashboard = dashboard;
     }
 
-    public IActionResult Privacy()
+    // All the figures are calculated in DashboardService; the controller only shows them.
+    public async Task<IActionResult> Index()
     {
-        return View();
+        return View(await _dashboard.GetSummaryAsync());
     }
-
- 
 }
