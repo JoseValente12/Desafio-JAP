@@ -8,16 +8,41 @@ namespace JapCarRental.Web.Controllers;
 public class VehiclesController : Controller
 {
     private readonly IVehicleService _vehicles;
-
+    private const int PageSize = 10;
     public VehiclesController(IVehicleService vehicles)
     {
         _vehicles = vehicles;
     }
 
-    public async Task<IActionResult> Index() =>
-        View(await _vehicles.GetAllAsync());
+    // GET so a search can be bookmarked and the browser back button works.
+public async Task<IActionResult> Index(string? search, int page = 1)
+{
+    var all = await _vehicles.GetAllAsync();
+    var term = search?.Trim();
 
-    public IActionResult Create() => View("Form", new VehicleFormViewModel());
+    IEnumerable<VehicleListItem> filtered = all;
+    if (!string.IsNullOrEmpty(term))
+    {
+        // Plates are stored without separators (AA11BB), so "aa-11" must be compared as "aa11".
+        var plateTerm = new string(term.Where(char.IsLetterOrDigit).ToArray());
+
+        filtered = all.Where(v =>
+            Matches($"{v.Brand} {v.Model}", term) ||
+            (plateTerm.Length > 0 && Matches(v.LicensePlate, plateTerm)));
+    }
+
+    return View(new VehicleIndexViewModel(
+        PagedList<VehicleListItem>.Create(filtered, page, PageSize),
+        term,
+        all.Count,
+        all.Count(v => v.IsRented)));
+}
+
+// Case-insensitive "contains" so "clio" finds "Renault Clio".
+private static bool Matches(string value, string term) =>
+    value.Contains(term, StringComparison.OrdinalIgnoreCase);
+
+public IActionResult Create() => View("Form", new VehicleFormViewModel());
 
     // ValidateAntiForgeryToken protects every POST against cross-site request forgery.
     [HttpPost, ValidateAntiForgeryToken]

@@ -1,26 +1,20 @@
-@model JapCarRental.Web.ViewModels.VehicleIndexViewModel
+@model JapCarRental.Web.ViewModels.CustomerIndexViewModel
 
 @{
-    ViewData["Title"] = "Veículos";
+    ViewData["Title"] = "Clientes";
     // Not called "page": @page is a reserved Razor directive.
-    var paged = Model.Vehicles;
+    var paged = Model.Customers;
     var searching = !string.IsNullOrEmpty(Model.Search);
-
-    // Plates are stored without separators (AA11BB); the dashes are only a display choice.
-    static string ShowPlate(string plate) =>
-        plate.Length == 6 ? $"{plate[..2]}-{plate[2..4]}-{plate[4..]}" : plate;
 }
 
 <div class="jr-page-head">
     <div>
-        <h1 class="jr-title">Veículos</h1>
+        <h1 class="jr-title">Clientes</h1>
         <p class="jr-subtitle">
-            @(searching
-                ? $"{paged.TotalItems} resultados"
-                : $"{Model.TotalVehicles} na frota, {Model.RentedVehicles} alugados hoje")
+            @(searching ? $"{paged.TotalItems} resultados" : $"{Model.TotalCustomers} registados")
         </p>
     </div>
-    <a asp-action="Create" class="jr-btn jr-btn-primary">Novo veículo</a>
+    <a asp-action="Create" class="jr-btn jr-btn-primary">Novo cliente</a>
 </div>
 
 @if (TempData["Success"] is string success)
@@ -31,12 +25,11 @@
 {
     <div class="jr-alert jr-alert-error" role="alert">@error</div>
 }
-
-@if (Model.TotalVehicles == 0)
+@if (Model.TotalCustomers == 0)
 {
     <div class="jr-empty">
-        <p>Ainda não há veículos na frota. Adicione o primeiro para começar a gerir os alugueres.</p>
-        <a asp-action="Create" class="jr-btn jr-btn-primary">Adicionar veículo</a>
+        <p>Ainda não há clientes. Adicione o primeiro para poder criar contratos.</p>
+        <a asp-action="Create" class="jr-btn jr-btn-primary">Adicionar cliente</a>
     </div>
 }
 else
@@ -45,18 +38,18 @@ else
           data-live-search data-target="#results">
         <div class="jr-search-box">
             <input type="search" name="search" value="@Model.Search" class="jr-input"
-                   placeholder="Pesquisar por marca, modelo ou matrícula"
-                   aria-label="Pesquisar veículos" autocomplete="off" />
+                   placeholder="Pesquisar por nome, email, telefone ou carta"
+                   aria-label="Pesquisar clientes" autocomplete="off" />
             <button type="submit" class="jr-btn jr-btn-primary">Pesquisar</button>
         </div>
     </form>
 
-    @* Only this area is replaced while typing (see wwwroot/js/live-search.js). *@
+    @* Only this area is replaced while typing. *@
     <div id="results" aria-live="polite">
         @if (paged.Items.Count == 0)
         {
             <div class="jr-empty">
-                <p>Nenhum veículo corresponde a "@Model.Search". Tente a marca, o modelo ou a matrícula.</p>
+                <p>Nenhum cliente corresponde a "@Model.Search". Tente outro nome, email ou telefone.</p>
             </div>
         }
         else
@@ -65,40 +58,28 @@ else
                 <table class="jr-table">
                     <thead>
                         <tr>
-                            <th>Veículo</th>
-                            <th>Matrícula</th>
-                            <th>Ano</th>
-                            <th>Combustível</th>
-                            <th>Estado</th>
+                            <th>Nome</th>
+                            <th>Email</th>
+                            <th>Telefone</th>
+                            <th>Carta</th>
+                            <th>Contratos</th>
                             <th></th>
                         </tr>
                     </thead>
                     <tbody>
-                    @foreach (var v in paged.Items)
+                    @foreach (var c in paged.Items)
                     {
                         <tr>
-                            <td class="jr-vehicle-name">@v.Brand @v.Model</td>
-                            <td>
-                                <span class="plate"><span class="plate-eu">P</span><span class="plate-text">@ShowPlate(v.LicensePlate)</span></span>
-                            </td>
-                            <td>@v.ManufactureYear</td>
-                            <td>@Html.DisplayFor(_ => v.FuelType)</td>
-                            <td>
-                                @* Status is calculated from the contracts, never stored. *@
-                                @if (v.IsRented)
-                                {
-                                    <span class="status status-busy">Alugado</span>
-                                }
-                                else
-                                {
-                                    <span class="status status-ok">Disponível</span>
-                                }
-                            </td>
+                            <td class="jr-vehicle-name">@c.FullName</td>
+                            <td>@c.Email</td>
+                            <td>@c.PhoneNumber</td>
+                            <td>@c.DrivingLicenseNumber</td>
+                            <td>@c.ContractCount</td>
                             <td>
                                 <div class="jr-actions">
-                                    <a asp-action="Edit" asp-route-id="@v.Id" class="jr-btn jr-btn-quiet jr-btn-sm">Editar</a>
-                                    <form asp-action="Delete" asp-route-id="@v.Id" method="post"
-                                          onsubmit="return confirm('Remover este veículo?');">
+                                    <a asp-action="Edit" asp-route-id="@c.Id" class="jr-btn jr-btn-quiet jr-btn-sm">Editar</a>
+                                    <form asp-action="Delete" asp-route-id="@c.Id" method="post"
+                                          onsubmit="return confirm('Remover este cliente?');">
                                         <button type="submit" class="jr-btn jr-btn-danger jr-btn-sm">Remover</button>
                                     </form>
                                 </div>
