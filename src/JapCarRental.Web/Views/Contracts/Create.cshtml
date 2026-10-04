@@ -1,0 +1,65 @@
+@model JapCarRental.Web.ViewModels.ContractFormViewModel
+
+@{
+    ViewData["Title"] = "Novo contrato";
+}
+
+<a asp-action="Index" class="jr-back">Voltar aos contratos</a>
+
+<div class="jr-page-head">
+    <h1 class="jr-title">Novo contrato</h1>
+</div>
+
+@* data-available-url tells available-vehicles.js where to ask for the free vehicles. *@
+<form method="post" class="jr-form" asp-action="Create"
+      data-available-url="@Url.Action("AvailableVehicles")">
+    <div asp-validation-summary="ModelOnly"></div>
+
+    <div class="jr-field">
+        <label asp-for="CustomerId"></label>
+        @* data-searchable: searchable-select.js adds a search box above this list. *@
+        <select asp-for="CustomerId" asp-items="Model.Customers" class="jr-input"
+                data-searchable data-search-placeholder="Pesquisar cliente por nome ou email">
+            <option value="">Selecione um cliente</option>
+        </select>
+        <span asp-validation-for="CustomerId"></span>
+    </div>
+
+    <div class="jr-row">
+        <div class="jr-field">
+            <label asp-for="StartDate"></label>
+            <input asp-for="StartDate" class="jr-input" />
+            <span asp-validation-for="StartDate"></span>
+        </div>
+        <div class="jr-field">
+            <label asp-for="EndDate"></label>
+            <input asp-for="EndDate" class="jr-input" />
+            <span asp-validation-for="EndDate"></span>
+        </div>
+    </div>
+
+    <div class="jr-field">
+        <label asp-for="VehicleId"></label>
+        <select asp-for="VehicleId" asp-items="Model.Vehicles" class="jr-input"
+                data-searchable data-search-placeholder="Pesquisar veículo por marca, modelo ou matrícula">
+            <option value="">Selecione um veículo</option>
+        </select>
+        <div class="jr-hint" id="vehicle-hint">Só aparecem os veículos livres nas datas escolhidas.</div>
+        <span asp-validation-for="VehicleId"></span>
+    </div>
+
+    <div class="jr-field">
+        <label asp-for="InitialMileage"></label>
+        <input asp-for="InitialMileage" class="jr-input" />
+        <span asp-validation-for="InitialMileage"></span>
+    </div>
+
+    <button type="submit" class="jr-btn jr-btn-primary">Criar contrato</button>
+    <a asp-action="Index" class="jr-btn">Voltar</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/searchable-select.js" asp-append-version="true"></script>
+    <script src="~/js/available-vehicles.js" asp-append-version="true"></script>
+}
