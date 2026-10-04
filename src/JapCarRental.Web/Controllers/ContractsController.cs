@@ -60,7 +60,7 @@ public class ContractsController : Controller
         var form = new ContractFormViewModel { StartDate = today, EndDate = today.AddDays(1) };
 
         await LoadOptionsAsync(form);
-        return View(form);
+        return View("Form", form);
     }
 
     [HttpPost, ValidateAntiForgeryToken]
@@ -80,19 +80,74 @@ public class ContractsController : Controller
 
         // Any failure shows the form again, with fresh dropdowns for the submitted dates.
         await LoadOptionsAsync(form);
-        return View(form);
+        return View("Form", form);
+    }
+
+    public async Task<IActionResult> Edit(int id)
+    {
+        var contract = await _contracts.GetByIdAsync(id);
+        if (contract is null) return NotFound();
+
+        if (contract.Status != ContractStatus.Upcoming)
+        {
+            TempData["Error"] = "Contratos em curso ou finalizados não podem ser alterados.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        var form = new ContractFormViewModel
+        {
+            Id = contract.Id,
+            CustomerId = contract.CustomerId,
+            VehicleId = contract.VehicleId,
+            StartDate = contract.StartDate,
+            EndDate = contract.EndDate,
+            InitialMileage = contract.InitialMileage
+        };
+
+        await LoadOptionsAsync(form, ignoreContractId: id);
+        return View("Form", form);
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(int id, ContractFormViewModel form)
+    {
+        if (id != form.Id) return BadRequest();
+
+        var contract = await _contracts.GetByIdAsync(id);
+        if (contract is null) return NotFound();
+
+        if (contract.Status != ContractStatus.Upcoming)
+        {
+            TempData["Error"] = "Contratos em curso ou finalizados não podem ser alterados.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        if (ModelState.IsValid)
+        {
+            var result = await _contracts.UpdateAsync(id, ToInput(form));
+            if (result.Succeeded)
+            {
+                TempData["Success"] = "Contrato atualizado com sucesso.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            result.AddToModelState(ModelState);
+        }
+
+        await LoadOptionsAsync(form, ignoreContractId: id);
+        return View("Form", form);
     }
 
     // JSON used by available-vehicles.js: only the vehicles that are free in the period.
     [HttpGet]
-    public async Task<IActionResult> AvailableVehicles(string? start, string? end)
+    public async Task<IActionResult> AvailableVehicles(string? start, string? end, int? ignoreContractId = null)
     {
         if (!TryParseDate(start, out var startDate) || !TryParseDate(end, out var endDate))
         {
             return Json(Array.Empty<object>());
         }
 
-        var vehicles = await _contracts.GetAvailableVehiclesAsync(startDate, endDate);
+        var vehicles = await _contracts.GetAvailableVehiclesAsync(startDate, endDate, ignoreContractId);
         return Json(vehicles.Select(v => new { id = v.Id, description = v.Description }));
     }
 
@@ -127,7 +182,7 @@ public class ContractsController : Controller
 
     private DateOnly Today() => DateOnly.FromDateTime(_timeProvider.GetLocalNow().DateTime);
 
-    private async Task LoadOptionsAsync(ContractFormViewModel form)
+    private async Task LoadOptionsAsync(ContractFormViewModel form, int? ignoreContractId = null)
     {
         var customers = await _customers.GetAllAsync();
         form.Customers = customers
@@ -137,7 +192,7 @@ public class ContractsController : Controller
         // Only vehicles free in the chosen period; empty until both dates are valid.
         if (form.StartDate is { } start && form.EndDate is { } end)
         {
-            var vehicles = await _contracts.GetAvailableVehiclesAsync(start, end);
+            var vehicles = await _contracts.GetAvailableVehiclesAsync(start, end, ignoreContractId);
             form.Vehicles = vehicles
                 .Select(v => new SelectListItem(v.Description, v.Id.ToString()))
                 .ToList();

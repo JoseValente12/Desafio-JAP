@@ -8,6 +8,8 @@ namespace JapCarRental.Web.ViewModels;
 // Nullable ids and dates let [Required] tell "nothing chosen" from a real value.
 public class ContractFormViewModel
 {
+    public int? Id { get; set; }
+
     [Required(ErrorMessage = "Selecione um cliente.")]
     [Display(Name = "Cliente")]
     public int? CustomerId { get; set; }
