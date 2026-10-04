@@ -90,4 +90,55 @@ public class ContractsControllerTests : IDisposable
         var viewResult = Assert.IsType<ViewResult>(result);
         Assert.Equal("Form", viewResult.ViewName);
     }
+
+    [Fact]
+    public async Task Index_FiltersByStatus()
+    {
+        await DbSeeder.SeedAsync(_database.Context);
+
+        var result = await _controller.Index(search: null, page: 1, status: ContractStatus.Upcoming);
+
+        var viewResult = Assert.IsType<ViewResult>(result);
+        var model = Assert.IsType<JapCarRental.Web.ViewModels.ContractIndexViewModel>(viewResult.Model);
+
+        Assert.Equal(ContractStatus.Upcoming, model.Status);
+        Assert.All(model.Contracts.Items, c => Assert.Equal(ContractStatus.Upcoming, c.Status));
+    }
+
+    [Fact]
+    public async Task Index_FiltersByDateRange()
+    {
+        await DbSeeder.SeedAsync(_database.Context);
+        var from = new DateOnly(2026, 10, 10);
+        var to = new DateOnly(2026, 10, 15);
+
+        var result = await _controller.Index(search: null, page: 1, status: null, from: from, to: to);
+
+        var viewResult = Assert.IsType<ViewResult>(result);
+        var model = Assert.IsType<JapCarRental.Web.ViewModels.ContractIndexViewModel>(viewResult.Model);
+
+        Assert.Equal(from, model.From);
+        Assert.Equal(to, model.To);
+        Assert.All(model.Contracts.Items, c =>
+        {
+            Assert.True(c.EndDate >= from);
+            Assert.True(c.StartDate <= to);
+        });
+    }
+
+    [Fact]
+    public async Task Index_AddsModelError_WhenToDateIsBeforeFromDate()
+    {
+        await DbSeeder.SeedAsync(_database.Context);
+        var from = new DateOnly(2026, 10, 25);
+        var to = new DateOnly(2026, 10, 10);
+
+        var result = await _controller.Index(search: null, page: 1, status: null, from: from, to: to);
+
+        var viewResult = Assert.IsType<ViewResult>(result);
+        var model = Assert.IsType<JapCarRental.Web.ViewModels.ContractIndexViewModel>(viewResult.Model);
+
+        Assert.Empty(model.Contracts.Items);
+        Assert.True(_controller.ModelState.ContainsKey("to"));
+    }
 }
