@@ -142,3 +142,19 @@ body {
 
 /* Disabled state (for buttons we disable while a form is submitting). */
 .jr-btn:disabled { opacity: .55; cursor: not-allowed; }
+
+/* ---------- Search and paging ---------- */
+.jr-search { margin-bottom: 16px; }
+.jr-search-box { display: flex; max-width: 640px; }
+
+/* Input and button read as one control: the button sits at the end of the bar. */
+.jr-search-box .jr-input { flex: 1; border-top-right-radius: 0; border-bottom-right-radius: 0; border-right: 0; }
+.jr-search-box .jr-btn { border-top-left-radius: 0; border-bottom-left-radius: 0; }
+
+.jr-pager {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 14px 24px; flex-wrap: wrap;        /* row gap, column gap */
+  margin-top: 24px; color: var(--muted); font-size: .92rem; line-height: 1.8;
+}
+.jr-pager-nav { display: flex; align-items: center; gap: 16px; }
+.is-disabled { opacity: .55; cursor: not-allowed; }
