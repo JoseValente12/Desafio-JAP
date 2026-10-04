@@ -1,6 +1,7 @@
 using JapCarRental.Web.Models;
 using JapCarRental.Web.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace JapCarRental.Tests.Services;
 
@@ -55,6 +56,42 @@ public class CustomerServiceTests : IDisposable
         Assert.False(result.Succeeded);
         Assert.Contains("Email", result.Errors.Keys);
         Assert.Equal(1, await _database.Context.Customers.CountAsync());
+    }
+
+    private sealed class RaceInterceptor(Func<Task> competingInsert) : SaveChangesInterceptor
+    {
+        private bool _done;
+
+        public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
+            DbContextEventData eventData, InterceptionResult<int> result, CancellationToken ct = default)
+        {
+            if (!_done)
+            {
+                _done = true;
+                await competingInsert();
+            }
+            return await base.SavingChangesAsync(eventData, result, ct);
+        }
+    }
+
+    [Fact]
+    public async Task Create_ReturnsEmailError_WhenAnotherRequestWinsTheRace()
+    {
+        var interceptor = new RaceInterceptor(async () =>
+        {
+            using var other = _database.CreateContext();
+            other.Customers.Add(new Customer("Ana Race", "race@example.com", "920000002", "P-2"));
+            await other.SaveChangesAsync();
+        });
+
+        using var racedContext = _database.CreateContext(interceptor);
+        var service = new CustomerService(racedContext);
+
+        var result = await service.CreateAsync(new CustomerInput("Ana", "race@example.com", "910000001", "P-1"));
+
+        Assert.False(result.Succeeded);
+        Assert.Contains("Email", result.Errors.Keys);
+        Assert.Equal("Já existe um cliente com este email.", result.Errors["Email"].Single());
     }
 
     [Theory]

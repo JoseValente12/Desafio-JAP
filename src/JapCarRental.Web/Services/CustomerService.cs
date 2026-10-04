@@ -58,8 +58,22 @@ public class CustomerService : ICustomerService
 
         _db.Customers.Add(customer);
 
-        // The unique index on Email is the last guard against two simultaneous requests.
-        await _db.SaveChangesAsync();
+        try
+        {
+            // The unique index on Email is the last guard against two simultaneous requests.
+            await _db.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            _db.Entry(customer).State = EntityState.Detached;
+
+            var emailTaken = await _db.Customers.AnyAsync(c => c.Email == customer.Email);
+            if (!emailTaken) throw;
+
+            var result = new OperationResult<int>();
+            result.AddError(nameof(CustomerInput.Email), "Já existe um cliente com este email.");
+            return result;
+        }
 
         return OperationResult<int>.Success(customer.Id);
     }
@@ -92,7 +106,21 @@ public class CustomerService : ICustomerService
             NormalizePhone(input.PhoneNumber),
             NormalizeLicense(input.DrivingLicenseNumber));
 
-        await _db.SaveChangesAsync();
+        try
+        {
+            await _db.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            _db.Entry(customer).State = EntityState.Unchanged;
+
+            var emailTaken = await _db.Customers.AnyAsync(c => c.Id != id && c.Email == customer.Email);
+            if (!emailTaken) throw;
+
+            var result = new OperationResult();
+            result.AddError(nameof(CustomerInput.Email), "Já existe outro cliente com este email.");
+            return result;
+        }
 
         return OperationResult.Success();
     }
