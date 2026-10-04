@@ -6,4 +6,5 @@ public record VehicleIndexViewModel(
     PagedList<VehicleListItem> Vehicles,
     string? Search,
     int TotalVehicles,     // whole fleet, ignoring the search, to tell "empty" from "no results"
-    int RentedVehicles);   // rented today across the whole fleet, shown in the page header
+    int RentedVehicles,    // rented today across the whole fleet, shown in the page header
+    VehicleAvailability? Availability = null);
