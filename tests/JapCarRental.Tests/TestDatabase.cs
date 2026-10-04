@@ -1,6 +1,7 @@
 using JapCarRental.Web.Data;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace JapCarRental.Tests;
 
@@ -26,6 +27,21 @@ public sealed class TestDatabase : IDisposable
         Context = new AppDbContext(options);
         Context.Database.EnsureCreated();
     }
+
+    public AppDbContext CreateContext(params IInterceptor[] interceptors)
+    {
+        var builder = new DbContextOptionsBuilder<AppDbContext>()
+            .UseSqlite(_connection);
+
+        if (interceptors.Length > 0)
+        {
+            builder.AddInterceptors(interceptors);
+        }
+
+        return new AppDbContext(builder.Options);
+    }
+
+    public AppDbContext CreateSecondContext() => CreateContext();
 
     public void Dispose()
     {

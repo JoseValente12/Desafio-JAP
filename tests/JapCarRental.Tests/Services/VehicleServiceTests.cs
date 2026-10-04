@@ -1,6 +1,7 @@
 using JapCarRental.Web.Models;
 using JapCarRental.Web.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Time.Testing;
 
 namespace JapCarRental.Tests.Services;
@@ -20,6 +21,42 @@ public class VehicleServiceTests : IDisposable
 
     private static VehicleInput ValidInput(string plate = "AA11BB") =>
         new("Renault", "Clio", plate, 2021, FuelType.Petrol);
+
+    private sealed class RaceInterceptor(Func<Task> competingInsert) : SaveChangesInterceptor
+    {
+        private bool _done;
+
+        public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
+            DbContextEventData eventData, InterceptionResult<int> result, CancellationToken ct = default)
+        {
+            if (!_done)
+            {
+                _done = true;
+                await competingInsert();
+            }
+            return await base.SavingChangesAsync(eventData, result, ct);
+        }
+    }
+
+    [Fact]
+    public async Task Create_ReturnsPlateError_WhenAnotherRequestWinsTheRace()
+    {
+        var interceptor = new RaceInterceptor(async () =>
+        {
+            using var other = _database.CreateContext();
+            other.Vehicles.Add(new Vehicle("Peugeot", "208", "AA11BB", 2022, FuelType.Diesel));
+            await other.SaveChangesAsync();
+        });
+
+        using var racedContext = _database.CreateContext(interceptor);
+        var service = new VehicleService(racedContext, _time);
+
+        var result = await service.CreateAsync(ValidInput("AA11BB"));
+
+        Assert.False(result.Succeeded);
+        Assert.Contains("LicensePlate", result.Errors.Keys);
+        Assert.Equal("Já existe um veículo com esta matrícula.", result.Errors["LicensePlate"].Single());
+    }
 
     [Fact]
     public async Task Create_Succeeds_AndNormalizesThePlate()
