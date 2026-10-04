@@ -1,0 +1,17 @@
+@model ErrorViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<section class="jr-error">
+    <p class="jr-error-code">@Model.StatusCode</p>
+    <h1>@Model.Title</h1>
+    @if (!string.IsNullOrEmpty(Model.RequestId))
+    {
+        <p class="jr-error-id">
+            Se o problema persistir, contacte o suporte e indique o código: 
+            <code>@Model.RequestId</code>
+        </p>
+    }
+    <a class="jr-btn jr-btn-primary" asp-controller="Contracts" asp-action="Index">Voltar ao início</a>
+</section>
