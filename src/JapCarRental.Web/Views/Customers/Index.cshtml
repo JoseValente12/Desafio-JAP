@@ -79,7 +79,7 @@ else
                                 <div class="jr-actions">
                                     <a asp-action="Edit" asp-route-id="@c.Id" class="jr-btn jr-btn-quiet jr-btn-sm">Editar</a>
                                     <form asp-action="Delete" asp-route-id="@c.Id" method="post"
-                                          onsubmit="return confirm('Remover este cliente?');">
+                                          data-confirm="return confirm('Remover este cliente?');">
                                         <button type="submit" class="jr-btn jr-btn-danger jr-btn-sm">Remover</button>
                                     </form>
                                 </div>

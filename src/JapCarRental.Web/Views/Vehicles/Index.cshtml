@@ -98,7 +98,7 @@ else
                                 <div class="jr-actions">
                                     <a asp-action="Edit" asp-route-id="@v.Id" class="jr-btn jr-btn-quiet jr-btn-sm">Editar</a>
                                     <form asp-action="Delete" asp-route-id="@v.Id" method="post"
-                                          onsubmit="return confirm('Remover este veículo?');">
+                                          data-confirm="return confirm('Remover este veículo?');">
                                         <button type="submit" class="jr-btn jr-btn-danger jr-btn-sm">Remover</button>
                                     </form>
                                 </div>
