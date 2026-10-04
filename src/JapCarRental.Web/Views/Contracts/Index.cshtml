@@ -1,20 +1,26 @@
+@using JapCarRental.Web.Services
 @model JapCarRental.Web.ViewModels.ContractIndexViewModel
 
 @{
     ViewData["Title"] = "Contratos";
     // Not called "page": @page is a reserved Razor directive.
     var paged = Model.Contracts;
-    var searching = !string.IsNullOrEmpty(Model.Search);
+    var filtering = !string.IsNullOrEmpty(Model.Search)
+                    || Model.Status.HasValue || Model.From.HasValue || Model.To.HasValue;
+
+    // Dates travel in the URL as yyyy-MM-dd: it is unambiguous and it is what <input type="date"> uses.
+    var from = Model.From?.ToString("yyyy-MM-dd");
+    var to = Model.To?.ToString("yyyy-MM-dd");
 
     // Plates are stored without separators (AA11BB); the dashes are only a display choice.
     static string ShowPlate(string plate) =>
         plate.Length == 6 ? $"{plate[..2]}-{plate[2..4]}-{plate[4..]}" : plate;
 
-    static string StatusClass(JapCarRental.Web.Services.ContractStatus status) => status switch
+    static string StatusClass(ContractStatus status) => status switch
     {
-        JapCarRental.Web.Services.ContractStatus.Upcoming => "status-upcoming",
-        JapCarRental.Web.Services.ContractStatus.Active => "status-busy",
-        JapCarRental.Web.Services.ContractStatus.Finished => "status-done",
+        ContractStatus.Upcoming => "status-upcoming",
+        ContractStatus.Active => "status-busy",
+        ContractStatus.Finished => "status-done",
         _ => "status-cancelled"
     };
 }
@@ -23,7 +29,7 @@
     <div>
         <h1 class="jr-title">Contratos</h1>
         <p class="jr-subtitle">
-            @(searching ? $"{paged.TotalItems} resultados" : $"{Model.TotalContracts} registados")
+            @(filtering ? $"{paged.TotalItems} resultados" : $"{Model.TotalContracts} registados")
         </p>
     </div>
     <a asp-action="Create" class="jr-btn jr-btn-primary">Novo contrato</a>
@@ -55,13 +61,36 @@ else
                    aria-label="Pesquisar contratos" autocomplete="off" />
             <button type="submit" class="jr-btn jr-btn-primary">Pesquisar</button>
         </div>
+
+        <div class="jr-filters">
+            <div class="jr-filter">
+                <label for="status">Estado</label>
+                <select id="status" name="status" class="jr-input">
+                    <option value="">Todos</option>
+                    @foreach (var s in Enum.GetValues<ContractStatus>())
+                    {
+                        <option value="@s" selected="@(Model.Status == s)">@Html.DisplayFor(_ => s)</option>
+                    }
+                </select>
+            </div>
+            <div class="jr-filter">
+                <label for="from">De</label>
+                <input id="from" type="date" name="from" value="@from" max="@to" class="jr-input" />
+            </div>
+            <div class="jr-filter">
+                <label for="to">Até</label>
+                <input id="to" type="date" name="to" value="@to" min="@from" class="jr-input" />
+                <span class="field-validation-error">@Html.ValidationMessage("to")</span>
+            </div>
+            <a asp-action="Index" class="jr-btn jr-btn-quiet">Limpar filtros</a>
+        </div>
     </form>
 
     <div id="results" aria-live="polite">
         @if (paged.Items.Count == 0)
         {
             <div class="jr-empty">
-                <p>Nenhum contrato corresponde a "@Model.Search". Tente o nome do cliente, o veículo ou a matrícula.</p>
+                <p>Nenhum contrato corresponde à pesquisa ou aos filtros escolhidos.</p>
             </div>
         }
         else
@@ -96,11 +125,11 @@ else
                             <td>
                                 <div class="jr-actions">
                                     @* Only contracts that have not started can be edited or cancelled. *@
-                                    @if (c.Status == JapCarRental.Web.Services.ContractStatus.Upcoming)
+                                    @if (c.Status == ContractStatus.Upcoming)
                                     {
                                         <a asp-action="Edit" asp-route-id="@c.Id" class="jr-btn jr-btn-quiet jr-btn-sm">Editar</a>
                                         <form asp-action="Cancel" asp-route-id="@c.Id" method="post"
-                                              data-confirm="return confirm('Cancelar este contrato? Fica no histórico como cancelado.');">
+                                              data-confirm="Cancelar este contrato? Fica no histórico como cancelado.">
                                             <button type="submit" class="jr-btn jr-btn-danger jr-btn-sm">Cancelar</button>
                                         </form>
                                     }
@@ -115,9 +144,11 @@ else
             <nav class="jr-pager" aria-label="Paginação">
                 <span>A mostrar @paged.FirstItem a @paged.LastItem de @paged.TotalItems</span>
                 <div class="jr-pager-nav">
+                    @* Every link keeps the search and the filters, so changing page never loses them. *@
                     @if (paged.HasPrevious)
                     {
                         <a asp-action="Index" asp-route-page="@(paged.Page - 1)" asp-route-search="@Model.Search"
+                           asp-route-status="@Model.Status" asp-route-from="@from" asp-route-to="@to"
                            class="jr-btn jr-btn-quiet jr-btn-sm">Anterior</a>
                     }
                     else
@@ -130,6 +161,7 @@ else
                     @if (paged.HasNext)
                     {
                         <a asp-action="Index" asp-route-page="@(paged.Page + 1)" asp-route-search="@Model.Search"
+                           asp-route-status="@Model.Status" asp-route-from="@from" asp-route-to="@to"
                            class="jr-btn jr-btn-quiet jr-btn-sm">Seguinte</a>
                     }
                     else
