@@ -19,7 +19,7 @@
     static string StatusClass(ContractStatus status) => status switch
     {
         ContractStatus.Upcoming => "status-upcoming",
-        ContractStatus.Active => "status-busy",
+        ContractStatus.Active => "status-active",
         ContractStatus.Finished => "status-done",
         _ => "status-cancelled"
     };
