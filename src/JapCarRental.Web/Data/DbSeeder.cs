@@ -5,14 +5,14 @@ namespace JapCarRental.Web.Data;
 
 public static class DbSeeder
 {
-    public static async Task SeedAsync(AppDbContext db)
+    public static async Task SeedAsync(AppDbContext db, DateOnly? referenceDate = null)
     {
         if (await db.Vehicles.AnyAsync() || await db.Customers.AnyAsync())
         {
             return;
         }
 
-        var today = DateOnly.FromDateTime(DateTime.Today);
+        var today = referenceDate ?? DateOnly.FromDateTime(DateTime.Today);
 
         var vehicles = new[]
         {
