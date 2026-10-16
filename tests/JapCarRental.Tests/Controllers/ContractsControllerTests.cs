@@ -40,7 +40,7 @@ public class ContractsControllerTests : IDisposable
     [InlineData("04-10-2026", "25-10-2026")]
     public async Task AvailableVehicles_ReturnsAvailableVehicles_ForVariousDateFormats(string start, string end)
     {
-        await DbSeeder.SeedAsync(_database.Context);
+        await DbSeeder.SeedAsync(_database.Context, new DateOnly(2026, 10, 4));
 
         var result = await _controller.AvailableVehicles(start, end);
 
@@ -55,7 +55,7 @@ public class ContractsControllerTests : IDisposable
     [InlineData("invalid", "2026-10-25")]
     public async Task AvailableVehicles_ReturnsEmpty_ForInvalidDates(string? start, string? end)
     {
-        await DbSeeder.SeedAsync(_database.Context);
+        await DbSeeder.SeedAsync(_database.Context, new DateOnly(2026, 10, 4));
 
         var result = await _controller.AvailableVehicles(start, end);
 
@@ -67,7 +67,7 @@ public class ContractsControllerTests : IDisposable
     [Fact]
     public async Task Edit_Get_RedirectsWithTempDataError_WhenContractIsActiveOrFinished()
     {
-        await DbSeeder.SeedAsync(_database.Context);
+        await DbSeeder.SeedAsync(_database.Context, new DateOnly(2026, 10, 4));
         // Contract 1 in DbSeeder is active (2026-10-01 to 2026-10-08, today is 2026-10-04)
         var activeContractId = _database.Context.RentalContracts.First(c => c.StartDate <= new DateOnly(2026, 10, 4) && c.EndDate >= new DateOnly(2026, 10, 4)).Id;
 
@@ -81,7 +81,7 @@ public class ContractsControllerTests : IDisposable
     [Fact]
     public async Task Edit_Get_ReturnsView_WhenContractIsUpcoming()
     {
-        await DbSeeder.SeedAsync(_database.Context);
+        await DbSeeder.SeedAsync(_database.Context, new DateOnly(2026, 10, 4));
         // Contract 7 in DbSeeder is future/upcoming (2026-10-14 to 2026-10-18)
         var upcomingContractId = _database.Context.RentalContracts.First(c => c.StartDate > new DateOnly(2026, 10, 4)).Id;
 
@@ -94,7 +94,7 @@ public class ContractsControllerTests : IDisposable
     [Fact]
     public async Task Index_FiltersByStatus()
     {
-        await DbSeeder.SeedAsync(_database.Context);
+        await DbSeeder.SeedAsync(_database.Context, new DateOnly(2026, 10, 4));
 
         var result = await _controller.Index(search: null, page: 1, status: ContractStatus.Upcoming);
 
@@ -108,7 +108,7 @@ public class ContractsControllerTests : IDisposable
     [Fact]
     public async Task Index_FiltersByDateRange()
     {
-        await DbSeeder.SeedAsync(_database.Context);
+        await DbSeeder.SeedAsync(_database.Context, new DateOnly(2026, 10, 4));
         var from = new DateOnly(2026, 10, 10);
         var to = new DateOnly(2026, 10, 15);
 
@@ -129,7 +129,7 @@ public class ContractsControllerTests : IDisposable
     [Fact]
     public async Task Index_AddsModelError_WhenToDateIsBeforeFromDate()
     {
-        await DbSeeder.SeedAsync(_database.Context);
+        await DbSeeder.SeedAsync(_database.Context, new DateOnly(2026, 10, 4));
         var from = new DateOnly(2026, 10, 25);
         var to = new DateOnly(2026, 10, 10);
 
